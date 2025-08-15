@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, Share2, BookOpen, Target, Lightbulb, CheckCircle2 } from 'lucide-react';
+import { Download, Share2, BookOpen, Heart, MessageCircle, Hash } from 'lucide-react';
 
 interface NotesDisplayProps {
   requirement: string;
@@ -10,30 +10,58 @@ interface NotesDisplayProps {
   onBack: () => void;
 }
 
-const generateNoteContent = (requirement: string, noteCount: number) => {
-  const sections = [
-    {
-      title: "需求概述",
-      icon: Target,
-      content: `基于您的需求描述："${requirement.slice(0, 100)}..."，我们进行了全面的分析。`
-    },
-    {
-      title: "核心要点",
-      icon: Lightbulb,
-      content: "通过对您选择的分析维度进行深入研究，我们识别出以下关键要素需要重点关注。"
-    },
-    {
-      title: "实施建议",
-      icon: CheckCircle2,
-      content: "结合行业最佳实践和您的具体需求，我们制定了分阶段的实施路径。"
-    }
+const generateNotes = (requirement: string, noteCount: number, images: File[]) => {
+  const noteTemplates = [
+    "🔥 超好用的${product}！真的太惊艳了",
+    "💫 ${product}使用心得分享！姐妹们快来看",
+    "✨ 入手${product}一个月后的真实感受",
+    "🌟 ${product}深度测评！值得入手吗？",
+    "💕 ${product}使用技巧大公开！",
+    "🎉 ${product}开箱！第一印象超棒",
+    "🌈 ${product}日常使用分享",
+    "💎 ${product}性价比分析！",
+    "🎯 ${product}适合什么人群？",
+    "🔍 ${product}详细评测报告"
   ];
 
-  return sections;
+  const contentTemplates = [
+    "用了一段时间真的爱了！质量超好，性价比很高，强烈推荐给大家～",
+    "这个真的太好用了！完全符合我的需求，而且价格也很合理",
+    "姐妹们，这个真的值得入手！用了之后生活质量提升了不少",
+    "第一次用就被惊艳到了！功能齐全，操作也很简单",
+    "用过很多同类产品，这个真的是最满意的一个！",
+    "包装精美，质量上乘，使用体验非常好！",
+    "性价比真的很高，比预期的还要好用！",
+    "朋友推荐的，用了之后觉得真的很不错！",
+    "这个设计真的很贴心，细节处理得很到位！",
+    "用了一个月了，没有任何问题，质量很稳定！"
+  ];
+
+  const notes = [];
+  const productKeyword = requirement.split(' ')[0] || '产品';
+
+  for (let i = 0; i < noteCount; i++) {
+    const titleTemplate = noteTemplates[i % noteTemplates.length];
+    const title = titleTemplate.replace('${product}', productKeyword);
+    const content = contentTemplates[i % contentTemplates.length];
+    const image = images[i % images.length] || images[0];
+    
+    notes.push({
+      id: i + 1,
+      title,
+      content,
+      image,
+      tags: ['好物推荐', '种草', '测评', '日常分享'].slice(0, Math.floor(Math.random() * 3) + 2),
+      likes: Math.floor(Math.random() * 1000) + 100,
+      comments: Math.floor(Math.random() * 100) + 10
+    });
+  }
+
+  return notes;
 };
 
 export default function NotesDisplay({ requirement, noteCount, images, onBack }: NotesDisplayProps) {
-  const sections = generateNoteContent(requirement, noteCount);
+  const notes = generateNotes(requirement, noteCount, images);
 
   const handleDownload = () => {
     // 这里可以实现下载功能
@@ -54,7 +82,7 @@ export default function NotesDisplay({ requirement, noteCount, images, onBack }:
             <BookOpen className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            智能分析报告
+            小红书图文笔记
           </h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -76,7 +104,7 @@ export default function NotesDisplay({ requirement, noteCount, images, onBack }:
           className="bg-gradient-primary hover:shadow-glow transition-all duration-300"
         >
           <Download className="h-4 w-4 mr-2" />
-          下载报告
+          下载笔记
         </Button>
         <Button
           onClick={handleShare}
@@ -84,127 +112,75 @@ export default function NotesDisplay({ requirement, noteCount, images, onBack }:
           className="border-primary/40 hover:bg-primary/10"
         >
           <Share2 className="h-4 w-4 mr-2" />
-          分享报告
+          分享笔记
         </Button>
       </div>
 
-      {/* 笔记数量概览 */}
-      <Card className="p-6 bg-gradient-card backdrop-blur-sm border-primary/20 shadow-card">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-primary" />
-          生成笔记概览
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-background/50 rounded-lg border border-primary/10">
-            <div className="text-2xl font-bold text-primary">{noteCount}</div>
-            <div className="text-sm text-muted-foreground">图文笔记</div>
-          </div>
-          <div className="text-center p-4 bg-background/50 rounded-lg border border-primary/10">
-            <div className="text-2xl font-bold text-primary">{images.length}</div>
-            <div className="text-sm text-muted-foreground">产品图片</div>
-          </div>
-          <div className="text-center p-4 bg-background/50 rounded-lg border border-primary/10">
-            <div className="text-2xl font-bold text-primary">{Math.ceil(noteCount / 7)}</div>
-            <div className="text-sm text-muted-foreground">发布周期(周)</div>
-          </div>
-          <div className="text-center p-4 bg-background/50 rounded-lg border border-primary/10">
-            <div className="text-2xl font-bold text-primary">小红书</div>
-            <div className="text-sm text-muted-foreground">平台风格</div>
-          </div>
-        </div>
-      </Card>
-
-      {/* 产品图片展示 */}
-      {images.length > 0 && (
-        <Card className="p-6 bg-gradient-card backdrop-blur-sm border-primary/20 shadow-card">
-          <h3 className="text-lg font-semibold mb-4">产品图片</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {images.map((image, index) => (
-              <div key={index} className="relative group overflow-hidden rounded-lg">
-                <img
-                  src={URL.createObjectURL(image)}
-                  alt={`Product ${index + 1}`}
-                  className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* 分析报告内容 */}
-      <div className="grid gap-6">
-        {sections.map((section, index) => (
+      {/* 图文笔记展示 */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {notes.map((note) => (
           <Card
-            key={index}
-            className="p-8 bg-gradient-card backdrop-blur-sm border-primary/20 shadow-card hover:shadow-elegant transition-all duration-300"
+            key={note.id}
+            className="overflow-hidden bg-gradient-card backdrop-blur-sm border-primary/20 shadow-card hover:shadow-elegant transition-all duration-300 group"
           >
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-gradient-primary rounded-lg shrink-0">
-                <section.icon className="h-6 w-6 text-primary-foreground" />
+            {/* 笔记图片 */}
+            <div className="relative aspect-square overflow-hidden">
+              {note.image && (
+                <img
+                  src={URL.createObjectURL(note.image)}
+                  alt={note.title}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                />
+              )}
+              <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1">
+                <span className="text-white text-sm font-medium">#{note.id}</span>
               </div>
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold">{section.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {section.content}
-                </p>
-                
-                {/* 根据不同部分生成相关内容 */}
-                {index === 0 && (
-                  <div className="bg-background/50 rounded-lg p-4 border border-primary/10">
-                    <h4 className="font-medium mb-2">需求分析摘要</h4>
-                    <p className="text-sm text-muted-foreground">
-                      将为您生成 {noteCount} 份小红书风格的图文笔记，涵盖产品特色、使用场景、用户体验等多个维度。
-                    </p>
+            </div>
+
+            {/* 笔记内容 */}
+            <div className="p-6 space-y-4">
+              <h3 className="font-semibold text-lg leading-tight line-clamp-2">
+                {note.title}
+              </h3>
+              
+              <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3">
+                {note.content}
+              </p>
+
+              {/* 标签 */}
+              <div className="flex flex-wrap gap-2">
+                {note.tags.map((tag, tagIndex) => (
+                  <Badge
+                    key={tagIndex}
+                    variant="secondary"
+                    className="text-xs bg-primary/10 text-primary hover:bg-primary/20"
+                  >
+                    <Hash className="h-3 w-3 mr-1" />
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+
+              {/* 互动数据 */}
+              <div className="flex items-center justify-between pt-3 border-t border-primary/10">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Heart className="h-4 w-4 text-red-500" />
+                    <span>{note.likes}</span>
                   </div>
-                )}
-                
-                {index === 1 && (
-                  <div className="grid gap-3">
-                    {['产品卖点', '使用场景', '用户反馈'].map((topic, optIndex) => (
-                      <div key={optIndex} className="flex items-center gap-3 bg-background/50 rounded-lg p-3 border border-primary/10">
-                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                        <span className="text-sm">{topic}笔记 ({Math.ceil(noteCount / 3)} 份)</span>
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <MessageCircle className="h-4 w-4" />
+                    <span>{note.comments}</span>
                   </div>
-                )}
-                
-                {index === 2 && (
-                  <div className="space-y-3">
-                    <div className="bg-background/50 rounded-lg p-4 border border-primary/10">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        <span className="font-medium text-sm">第一阶段：基础架构</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">建立核心功能模块和基础设施</p>
-                    </div>
-                    <div className="bg-background/50 rounded-lg p-4 border border-primary/10">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-primary-glow rounded-full"></div>
-                        <span className="font-medium text-sm">第二阶段：功能完善</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">实现高级功能和用户体验优化</p>
-                    </div>
-                  </div>
-                )}
+                </div>
+                <Button size="sm" variant="ghost" className="text-xs text-primary hover:bg-primary/10">
+                  查看详情
+                </Button>
               </div>
             </div>
           </Card>
         ))}
       </div>
-
-      {/* 总结卡片 */}
-      <Card className="p-8 bg-gradient-primary text-primary-foreground shadow-glow">
-        <div className="text-center space-y-4">
-          <h3 className="text-2xl font-bold">分析完成</h3>
-          <p className="text-primary-foreground/90 max-w-2xl mx-auto">
-            基于您提供的需求描述和 {images.length} 张产品图片，
-            我们将生成 {noteCount} 份精美的小红书图文笔记。每份笔记都将包含吸引人的标题、精心设计的配图和引人入胜的文案。
-          </p>
-        </div>
-      </Card>
     </div>
   );
 }
