@@ -1,7 +1,32 @@
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Download, Share2, BookOpen, Heart, MessageCircle, Hash } from 'lucide-react';
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Download,
+  Share2,
+  BookOpen,
+  Heart,
+  MessageCircle,
+  Hash,
+  MoreVertical,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useState, useEffect } from "react";
+
+interface Note {
+  id: number;
+  title: string;
+  content: string;
+  image: File;
+  tags: string[];
+  likes: number;
+  comments: number;
+}
 
 interface NotesDisplayProps {
   requirement: string;
@@ -10,67 +35,119 @@ interface NotesDisplayProps {
   onBack: () => void;
 }
 
-const generateNotes = (requirement: string, noteCount: number, images: File[]) => {
-  const noteTemplates = [
-    "🔥 超好用的${product}！真的太惊艳了",
-    "💫 ${product}使用心得分享！姐妹们快来看",
-    "✨ 入手${product}一个月后的真实感受",
-    "🌟 ${product}深度测评！值得入手吗？",
-    "💕 ${product}使用技巧大公开！",
-    "🎉 ${product}开箱！第一印象超棒",
-    "🌈 ${product}日常使用分享",
-    "💎 ${product}性价比分析！",
-    "🎯 ${product}适合什么人群？",
-    "🔍 ${product}详细评测报告"
-  ];
+const noteTemplates = [
+  "🔥 超好用的${product}！真的太惊艳了",
+  "💫 ${product}使用心得分享！姐妹们快来看",
+  "✨ 入手${product}一个月后的真实感受",
+  "🌟 ${product}深度测评！值得入手吗？",
+  "💕 ${product}使用技巧大公开！",
+  "🎉 ${product}开箱！第一印象超棒",
+  "🌈 ${product}日常使用分享",
+  "💎 ${product}性价比分析！",
+  "🎯 ${product}适合什么人群？",
+  "🔍 ${product}详细评测报告",
+];
 
-  const contentTemplates = [
-    "用了一段时间真的爱了！质量超好，性价比很高，强烈推荐给大家～",
-    "这个真的太好用了！完全符合我的需求，而且价格也很合理",
-    "姐妹们，这个真的值得入手！用了之后生活质量提升了不少",
-    "第一次用就被惊艳到了！功能齐全，操作也很简单",
-    "用过很多同类产品，这个真的是最满意的一个！",
-    "包装精美，质量上乘，使用体验非常好！",
-    "性价比真的很高，比预期的还要好用！",
-    "朋友推荐的，用了之后觉得真的很不错！",
-    "这个设计真的很贴心，细节处理得很到位！",
-    "用了一个月了，没有任何问题，质量很稳定！"
-  ];
+const contentTemplates = [
+  "用了一段时间真的爱了！质量超好，性价比很高，强烈推荐给大家～",
+  "这个真的太好用了！完全符合我的需求，而且价格也很合理",
+  "姐妹们，这个真的值得入手！用了之后生活质量提升了不少",
+  "第一次用就被惊艳到了！功能齐全，操作也很简单",
+  "用过很多同类产品，这个真的是最满意的一个！",
+  "包装精美，质量上乘，使用体验非常好！",
+  "性价比真的很高，比预期的还要好用！",
+  "朋友推荐的，用了之后觉得真的很不错！",
+  "这个设计真的很贴心，细节处理得很到位！",
+  "用了一个月了，没有任何问题，质量很稳定！",
+];
 
+const generateRandomText = (productKeyword: string) => {
+  const titleTemplate =
+    noteTemplates[Math.floor(Math.random() * noteTemplates.length)];
+  const title = titleTemplate.replace("${product}", productKeyword);
+  const content =
+    contentTemplates[Math.floor(Math.random() * contentTemplates.length)];
+  return { title, content };
+};
+
+const generateNotes = (
+  requirement: string,
+  noteCount: number,
+  images: File[]
+): Note[] => {
   const notes = [];
-  const productKeyword = requirement.split(' ')[0] || '产品';
+  const productKeyword = requirement.split(" ")[0] || "产品";
 
   for (let i = 0; i < noteCount; i++) {
     const titleTemplate = noteTemplates[i % noteTemplates.length];
-    const title = titleTemplate.replace('${product}', productKeyword);
+    const title = titleTemplate.replace("${product}", productKeyword);
     const content = contentTemplates[i % contentTemplates.length];
     const image = images[i % images.length] || images[0];
-    
+
     notes.push({
       id: i + 1,
       title,
       content,
       image,
-      tags: ['好物推荐', '种草', '测评', '日常分享'].slice(0, Math.floor(Math.random() * 3) + 2),
+      tags: ["好物推荐", "种草", "测评", "日常分享"].slice(
+        0,
+        Math.floor(Math.random() * 3) + 2
+      ),
       likes: Math.floor(Math.random() * 1000) + 100,
-      comments: Math.floor(Math.random() * 100) + 10
+      comments: Math.floor(Math.random() * 100) + 10,
     });
   }
 
   return notes;
 };
 
-export default function NotesDisplay({ requirement, noteCount, images, onBack }: NotesDisplayProps) {
-  const notes = generateNotes(requirement, noteCount, images);
+export default function NotesDisplay({
+  requirement,
+  noteCount,
+  images,
+  onBack,
+}: NotesDisplayProps) {
+  const [notes, setNotes] = useState<Note[]>([]);
+
+  useEffect(() => {
+    setNotes(generateNotes(requirement, noteCount, images));
+  }, [requirement, noteCount, images]);
+
+  const productKeyword = requirement.split(" ")[0] || "产品";
+
+  const handleRegenerateText = (noteId: number) => {
+    setNotes(
+      notes.map((note) => {
+        if (note.id === noteId) {
+          const { title, content } = generateRandomText(productKeyword);
+          return { ...note, title, content };
+        }
+        return note;
+      })
+    );
+  };
+
+  const handleRegenerateImage = (noteId: number) => {
+    if (images.length === 0) return;
+    setNotes(
+      notes.map((note) => {
+        if (note.id === noteId) {
+          const newImage = images[Math.floor(Math.random() * images.length)];
+          return { ...note, image: newImage };
+        }
+        return note;
+      })
+    );
+  };
 
   const handleDownload = () => {
     // 这里可以实现下载功能
-    console.log('下载笔记');
+    console.log("下载笔记");
   };
 
   const handleShare = () => {
     // 这里可以实现分享功能
-    console.log('分享笔记');
+    console.log("分享笔记");
   };
 
   return (
@@ -104,15 +181,7 @@ export default function NotesDisplay({ requirement, noteCount, images, onBack }:
           className="bg-gradient-primary hover:shadow-glow transition-all duration-300"
         >
           <Download className="h-4 w-4 mr-2" />
-          下载笔记
-        </Button>
-        <Button
-          onClick={handleShare}
-          variant="outline"
-          className="border-primary/40 hover:bg-primary/10"
-        >
-          <Share2 className="h-4 w-4 mr-2" />
-          分享笔记
+          保存全部
         </Button>
       </div>
 
@@ -133,16 +202,20 @@ export default function NotesDisplay({ requirement, noteCount, images, onBack }:
                 />
               )}
               <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1">
-                <span className="text-white text-sm font-medium">#{note.id}</span>
+                <span className="text-white text-sm font-medium">
+                  #{note.id}
+                </span>
               </div>
             </div>
 
             {/* 笔记内容 */}
             <div className="p-6 space-y-4">
-              <h3 className="font-semibold text-lg leading-tight line-clamp-2">
-                {note.title}
-              </h3>
-              
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="flex-grow font-semibold text-lg leading-tight line-clamp-2">
+                  {note.title}
+                </h3>
+              </div>
+
               <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3">
                 {note.content}
               </p>
@@ -162,19 +235,35 @@ export default function NotesDisplay({ requirement, noteCount, images, onBack }:
               </div>
 
               {/* 互动数据 */}
-              <div className="flex items-center justify-between pt-3 border-t border-primary/10">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Heart className="h-4 w-4 text-red-500" />
-                    <span>{note.likes}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <MessageCircle className="h-4 w-4" />
-                    <span>{note.comments}</span>
-                  </div>
-                </div>
-                <Button size="sm" variant="ghost" className="text-xs text-primary hover:bg-primary/10">
-                  查看详情
+              <div className="flex items-center gap-4 w-full justify-between">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="text-xs text-primary hover:bg-primary/10"
+                      >
+                      重新生成
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem
+                      onClick={() => handleRegenerateText(note.id)}
+                    >
+                      重新生成文案
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleRegenerateImage(note.id)}
+                    >
+                      重新生成图片
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-xs text-primary hover:bg-primary/10"
+                >
+                  复制
                 </Button>
               </div>
             </div>

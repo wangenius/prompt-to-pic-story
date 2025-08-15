@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Upload, FileText, Sparkles, CheckCircle } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
 
 interface RequirementFormProps {
   onSubmit: (data: { requirement: string; noteCount: number; images: File[] }) => void;
@@ -86,14 +87,12 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
                 选择生成数量：
               </Label>
               <div className="flex-1">
-                <input
+                <Slider
                   id="noteCount"
-                  type="range"
-                  min="0"
-                  max="30"
-                  value={noteCount}
-                  onChange={(e) => setNoteCount(Number(e.target.value))}
-                  className="w-full h-2 bg-background/50 rounded-lg appearance-none cursor-pointer slider"
+                  max={30}
+                  step={1}
+                  value={[noteCount]}
+                  onValueChange={(value) => setNoteCount(value[0])}
                 />
               </div>
               <Badge 
