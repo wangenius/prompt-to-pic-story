@@ -7,7 +7,7 @@ import heroImage from '@/assets/hero-bg.jpg';
 
 interface SubmittedData {
   requirement: string;
-  selectedOptions: string[];
+  noteCount: number;
   images: File[];
 }
 
@@ -28,7 +28,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-8">
           <NotesDisplay
             requirement={submittedData.requirement}
-            selectedOptions={submittedData.selectedOptions}
+            noteCount={submittedData.noteCount}
             images={submittedData.images}
             onBack={handleBack}
           />
@@ -55,9 +55,9 @@ const Index = () => {
                 智能需求分析器
               </h1>
               <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed">
-                输入您的产品需求，选择分析维度，上传产品图片
+                输入您的产品需求，选择生成数量，上传产品图片
                 <br />
-                <span className="text-2xl font-semibold">AI 为您生成专业的图文分析笔记</span>
+                <span className="text-2xl font-semibold">AI 为您生成小红书图文笔记</span>
               </p>
             </div>
             
@@ -67,7 +67,7 @@ const Index = () => {
                   <Target className="h-6 w-6" />
                   <h3 className="font-semibold">精准分析</h3>
                 </div>
-                <p className="text-sm text-white/80">20个维度全面覆盖</p>
+                <p className="text-sm text-white/80">0-30份笔记定制</p>
               </Card>
               
               <Card className="p-6 bg-white/10 backdrop-blur-sm border-white/20 text-white">
@@ -83,7 +83,7 @@ const Index = () => {
                   <Sparkles className="h-6 w-6" />
                   <h3 className="font-semibold">智能洞察</h3>
                 </div>
-                <p className="text-sm text-white/80">AI驱动的深度分析</p>
+                <p className="text-sm text-white/80">小红书风格笔记</p>
               </Card>
             </div>
           </div>
@@ -98,7 +98,7 @@ const Index = () => {
               开始您的需求分析
             </h2>
             <p className="text-lg text-muted-foreground">
-              只需三步，即可获得专业的产品分析报告
+              只需三步，即可获得精美的小红书图文笔记
             </p>
           </div>
           

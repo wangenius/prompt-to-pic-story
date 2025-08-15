@@ -5,12 +5,12 @@ import { Download, Share2, BookOpen, Target, Lightbulb, CheckCircle2 } from 'luc
 
 interface NotesDisplayProps {
   requirement: string;
-  selectedOptions: string[];
+  noteCount: number;
   images: File[];
   onBack: () => void;
 }
 
-const generateNoteContent = (requirement: string, options: string[]) => {
+const generateNoteContent = (requirement: string, noteCount: number) => {
   const sections = [
     {
       title: "需求概述",
@@ -32,8 +32,8 @@ const generateNoteContent = (requirement: string, options: string[]) => {
   return sections;
 };
 
-export default function NotesDisplay({ requirement, selectedOptions, images, onBack }: NotesDisplayProps) {
-  const sections = generateNoteContent(requirement, selectedOptions);
+export default function NotesDisplay({ requirement, noteCount, images, onBack }: NotesDisplayProps) {
+  const sections = generateNoteContent(requirement, noteCount);
 
   const handleDownload = () => {
     // 这里可以实现下载功能
@@ -58,7 +58,7 @@ export default function NotesDisplay({ requirement, selectedOptions, images, onB
           </h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          基于您的需求和选择的 {selectedOptions.length} 个分析维度，我们为您生成了详细的图文笔记
+          基于您的需求，我们为您生成了 {noteCount} 份小红书风格的图文笔记
         </p>
       </div>
 
@@ -88,22 +88,29 @@ export default function NotesDisplay({ requirement, selectedOptions, images, onB
         </Button>
       </div>
 
-      {/* 分析维度概览 */}
+      {/* 笔记数量概览 */}
       <Card className="p-6 bg-gradient-card backdrop-blur-sm border-primary/20 shadow-card">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5 text-primary" />
-          已选择的分析维度
+          生成笔记概览
         </h3>
-        <div className="flex flex-wrap gap-2">
-          {selectedOptions.map((option, index) => (
-            <Badge
-              key={index}
-              className="bg-gradient-primary text-primary-foreground animate-float"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {option}
-            </Badge>
-          ))}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center p-4 bg-background/50 rounded-lg border border-primary/10">
+            <div className="text-2xl font-bold text-primary">{noteCount}</div>
+            <div className="text-sm text-muted-foreground">图文笔记</div>
+          </div>
+          <div className="text-center p-4 bg-background/50 rounded-lg border border-primary/10">
+            <div className="text-2xl font-bold text-primary">{images.length}</div>
+            <div className="text-sm text-muted-foreground">产品图片</div>
+          </div>
+          <div className="text-center p-4 bg-background/50 rounded-lg border border-primary/10">
+            <div className="text-2xl font-bold text-primary">{Math.ceil(noteCount / 7)}</div>
+            <div className="text-sm text-muted-foreground">发布周期(周)</div>
+          </div>
+          <div className="text-center p-4 bg-background/50 rounded-lg border border-primary/10">
+            <div className="text-2xl font-bold text-primary">小红书</div>
+            <div className="text-sm text-muted-foreground">平台风格</div>
+          </div>
         </div>
       </Card>
 
@@ -148,17 +155,17 @@ export default function NotesDisplay({ requirement, selectedOptions, images, onB
                   <div className="bg-background/50 rounded-lg p-4 border border-primary/10">
                     <h4 className="font-medium mb-2">需求分析摘要</h4>
                     <p className="text-sm text-muted-foreground">
-                      您的需求涉及 {selectedOptions.length} 个关键领域，我们将从技术可行性、用户体验、市场需求等多个角度进行深入分析。
+                      将为您生成 {noteCount} 份小红书风格的图文笔记，涵盖产品特色、使用场景、用户体验等多个维度。
                     </p>
                   </div>
                 )}
                 
                 {index === 1 && (
                   <div className="grid gap-3">
-                    {selectedOptions.slice(0, 3).map((option, optIndex) => (
+                    {['产品卖点', '使用场景', '用户反馈'].map((topic, optIndex) => (
                       <div key={optIndex} className="flex items-center gap-3 bg-background/50 rounded-lg p-3 border border-primary/10">
                         <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                        <span className="text-sm">{option}分析</span>
+                        <span className="text-sm">{topic}笔记 ({Math.ceil(noteCount / 3)} 份)</span>
                       </div>
                     ))}
                   </div>
@@ -193,8 +200,8 @@ export default function NotesDisplay({ requirement, selectedOptions, images, onB
         <div className="text-center space-y-4">
           <h3 className="text-2xl font-bold">分析完成</h3>
           <p className="text-primary-foreground/90 max-w-2xl mx-auto">
-            基于您提供的需求描述、{selectedOptions.length} 个分析维度和 {images.length} 张产品图片，
-            我们生成了这份全面的分析报告。希望这些洞察能够帮助您更好地规划和实施您的项目。
+            基于您提供的需求描述和 {images.length} 张产品图片，
+            我们将生成 {noteCount} 份精美的小红书图文笔记。每份笔记都将包含吸引人的标题、精心设计的配图和引人入胜的文案。
           </p>
         </div>
       </Card>

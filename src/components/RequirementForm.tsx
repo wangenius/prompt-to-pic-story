@@ -7,30 +7,16 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, FileText, Sparkles, CheckCircle } from 'lucide-react';
 
 interface RequirementFormProps {
-  onSubmit: (data: { requirement: string; selectedOptions: string[]; images: File[] }) => void;
+  onSubmit: (data: { requirement: string; noteCount: number; images: File[] }) => void;
 }
 
-const options = [
-  "用户体验优化", "界面设计改进", "功能需求分析", "技术架构评估",
-  "性能优化建议", "安全性检查", "移动端适配", "多语言支持",
-  "数据分析需求", "API接口设计", "数据库优化", "缓存策略",
-  "测试策略制定", "部署方案规划", "监控告警配置", "文档规范化",
-  "用户权限管理", "内容管理系统", "搜索功能优化", "社交媒体集成"
-];
 
 export default function RequirementForm({ onSubmit }: RequirementFormProps) {
   const [requirement, setRequirement] = useState('');
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [noteCount, setNoteCount] = useState(20);
   const [images, setImages] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const toggleOption = (option: string) => {
-    setSelectedOptions(prev => 
-      prev.includes(option) 
-        ? prev.filter(o => o !== option)
-        : [...prev, option]
-    );
-  };
 
   const handleImageUpload = (files: FileList | null) => {
     if (files) {
@@ -55,8 +41,8 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
   };
 
   const handleSubmit = () => {
-    if (requirement.trim() && selectedOptions.length > 0) {
-      onSubmit({ requirement, selectedOptions, images });
+    if (requirement.trim() && noteCount > 0) {
+      onSubmit({ requirement, noteCount, images });
     }
   };
 
@@ -83,7 +69,7 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
         </div>
       </Card>
 
-      {/* 选项选择区域 */}
+      {/* 笔记数量选择区域 */}
       <Card className="p-8 bg-gradient-card backdrop-blur-sm border-primary/20 shadow-card">
         <div className="space-y-6">
           <div className="flex items-center gap-3">
@@ -91,26 +77,37 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
               <CheckCircle className="h-5 w-5 text-primary-foreground" />
             </div>
             <Label className="text-lg font-semibold">
-              分析维度选择 ({selectedOptions.length}/20)
+              生成笔记数量
             </Label>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {options.map((option) => (
-              <Badge
-                key={option}
-                variant={selectedOptions.includes(option) ? "default" : "secondary"}
-                className={`
-                  cursor-pointer p-3 text-center transition-all duration-300 hover:scale-105
-                  ${selectedOptions.includes(option) 
-                    ? 'bg-gradient-primary text-primary-foreground shadow-glow' 
-                    : 'hover:bg-primary/10 hover:border-primary/40'
-                  }
-                `}
-                onClick={() => toggleOption(option)}
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Label htmlFor="noteCount" className="text-sm text-muted-foreground whitespace-nowrap">
+                选择生成数量：
+              </Label>
+              <div className="flex-1">
+                <input
+                  id="noteCount"
+                  type="range"
+                  min="0"
+                  max="30"
+                  value={noteCount}
+                  onChange={(e) => setNoteCount(Number(e.target.value))}
+                  className="w-full h-2 bg-background/50 rounded-lg appearance-none cursor-pointer slider"
+                />
+              </div>
+              <Badge 
+                variant="outline" 
+                className="border-primary/40 bg-gradient-primary text-primary-foreground min-w-[3rem] justify-center"
               >
-                {option}
+                {noteCount}
               </Badge>
-            ))}
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>0份</span>
+              <span>默认20份</span>
+              <span>30份</span>
+            </div>
           </div>
         </div>
       </Card>
@@ -187,7 +184,7 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
       <div className="flex justify-center">
         <Button
           onClick={handleSubmit}
-          disabled={!requirement.trim() || selectedOptions.length === 0}
+          disabled={!requirement.trim() || noteCount === 0}
           className="px-12 py-6 text-lg bg-gradient-primary hover:shadow-glow transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Sparkles className="h-5 w-5 mr-2" />
