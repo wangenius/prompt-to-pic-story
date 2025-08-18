@@ -17,12 +17,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
+import scriptsData from "@/assets/scripts.json";
+
+interface ScriptData {
+  title: string;
+  content: string;
+  tags: string[];
+}
 
 interface Note {
   id: number;
   title: string;
   content: string;
-  image: File;
+  imageSrc: string;
   tags: string[];
   likes: number;
   comments: number;
@@ -35,64 +42,27 @@ interface NotesDisplayProps {
   onBack: () => void;
 }
 
-const noteTemplates = [
-  "🔥 超好用的${product}！真的太惊艳了",
-  "💫 ${product}使用心得分享！姐妹们快来看",
-  "✨ 入手${product}一个月后的真实感受",
-  "🌟 ${product}深度测评！值得入手吗？",
-  "💕 ${product}使用技巧大公开！",
-  "🎉 ${product}开箱！第一印象超棒",
-  "🌈 ${product}日常使用分享",
-  "💎 ${product}性价比分析！",
-  "🎯 ${product}适合什么人群？",
-  "🔍 ${product}详细评测报告",
-];
-
-const contentTemplates = [
-  "用了一段时间真的爱了！质量超好，性价比很高，强烈推荐给大家～",
-  "这个真的太好用了！完全符合我的需求，而且价格也很合理",
-  "姐妹们，这个真的值得入手！用了之后生活质量提升了不少",
-  "第一次用就被惊艳到了！功能齐全，操作也很简单",
-  "用过很多同类产品，这个真的是最满意的一个！",
-  "包装精美，质量上乘，使用体验非常好！",
-  "性价比真的很高，比预期的还要好用！",
-  "朋友推荐的，用了之后觉得真的很不错！",
-  "这个设计真的很贴心，细节处理得很到位！",
-  "用了一个月了，没有任何问题，质量很稳定！",
-];
-
-const generateRandomText = (productKeyword: string) => {
-  const titleTemplate =
-    noteTemplates[Math.floor(Math.random() * noteTemplates.length)];
-  const title = titleTemplate.replace("${product}", productKeyword);
-  const content =
-    contentTemplates[Math.floor(Math.random() * contentTemplates.length)];
-  return { title, content };
-};
-
 const generateNotes = (
   requirement: string,
   noteCount: number,
   images: File[]
 ): Note[] => {
   const notes = [];
-  const productKeyword = requirement.split(" ")[0] || "产品";
+  const scripts = Object.values(scriptsData) as ScriptData[];
 
   for (let i = 0; i < noteCount; i++) {
-    const titleTemplate = noteTemplates[i % noteTemplates.length];
-    const title = titleTemplate.replace("${product}", productKeyword);
-    const content = contentTemplates[i % contentTemplates.length];
-    const image = images[i % images.length] || images[0];
+    const scriptIndex = i % scripts.length;
+    const script = scripts[scriptIndex];
+    // 使用 public 目录中的图片，对应编号 1-20
+    const imageNumber = (i % 20) + 1;
+    const imageSrc = `/${imageNumber}.png`;
 
     notes.push({
       id: i + 1,
-      title,
-      content,
-      image,
-      tags: ["好物推荐", "种草", "测评", "日常分享"].slice(
-        0,
-        Math.floor(Math.random() * 3) + 2
-      ),
+      title: script.title,
+      content: script.content,
+      imageSrc,
+      tags: script.tags,
       likes: Math.floor(Math.random() * 1000) + 100,
       comments: Math.floor(Math.random() * 100) + 10,
     });
@@ -113,14 +83,18 @@ export default function NotesDisplay({
     setNotes(generateNotes(requirement, noteCount, images));
   }, [requirement, noteCount, images]);
 
-  const productKeyword = requirement.split(" ")[0] || "产品";
-
   const handleRegenerateText = (noteId: number) => {
+    const scripts = Object.values(scriptsData) as ScriptData[];
     setNotes(
       notes.map((note) => {
         if (note.id === noteId) {
-          const { title, content } = generateRandomText(productKeyword);
-          return { ...note, title, content };
+          const randomScript = scripts[Math.floor(Math.random() * scripts.length)];
+          return { 
+            ...note, 
+            title: randomScript.title, 
+            content: randomScript.content,
+            tags: randomScript.tags
+          };
         }
         return note;
       })
@@ -128,12 +102,13 @@ export default function NotesDisplay({
   };
 
   const handleRegenerateImage = (noteId: number) => {
-    if (images.length === 0) return;
     setNotes(
       notes.map((note) => {
         if (note.id === noteId) {
-          const newImage = images[Math.floor(Math.random() * images.length)];
-          return { ...note, image: newImage };
+          // 随机选择一个 1-20 的图片
+          const newImageNumber = Math.floor(Math.random() * 20) + 1;
+          const newImageSrc = `/${newImageNumber}.png`;
+          return { ...note, imageSrc: newImageSrc };
         }
         return note;
       })
@@ -194,13 +169,11 @@ export default function NotesDisplay({
           >
             {/* 笔记图片 */}
             <div className="relative aspect-square overflow-hidden">
-              {note.image && (
-                <img
-                  src={URL.createObjectURL(note.image)}
-                  alt={note.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-              )}
+              <img
+                src={note.imageSrc}
+                alt={note.title}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              />
               <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1">
                 <span className="text-white text-sm font-medium">
                   #{note.id}
