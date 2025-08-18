@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Hash,
   MoreVertical,
+  Copy,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -168,16 +169,43 @@ export default function NotesDisplay({
             className="overflow-hidden bg-gradient-card backdrop-blur-sm border-primary/20 shadow-card hover:shadow-elegant transition-all duration-300 group"
           >
             {/* 笔记图片 */}
-            <div className="relative aspect-square overflow-hidden">
+            <div className="relative aspect-[3/4] overflow-hidden">
               <img
                 src={note.imageSrc}
                 alt={note.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
               />
-              <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1">
-                <span className="text-white text-sm font-medium">
-                  #{note.id}
-                </span>
+              <div className="absolute top-3 right-3">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white border-0"
+                  onClick={() => {
+                    // 复制图片到剪贴板
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.onload = () => {
+                      const canvas = document.createElement('canvas');
+                      canvas.width = img.width;
+                      canvas.height = img.height;
+                      const ctx = canvas.getContext('2d');
+                      if (ctx) {
+                        ctx.drawImage(img, 0, 0);
+                        canvas.toBlob((blob) => {
+                          if (blob) {
+                            const item = new ClipboardItem({ 'image/png': blob });
+                            navigator.clipboard.write([item]).then(() => {
+                              console.log('图片已复制到剪贴板');
+                            });
+                          }
+                        });
+                      }
+                    };
+                    img.src = note.imageSrc;
+                  }}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
               </div>
             </div>
 
