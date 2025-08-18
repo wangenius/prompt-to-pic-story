@@ -9,12 +9,11 @@ interface SubmittedData {
   requirement: string;
   noteCount: number;
   images: File[];
+  selectedSection: string;
 }
 
 const Index = () => {
-  const [submittedData, setSubmittedData] = useState<SubmittedData | null>(
-    null
-  );
+  const [submittedData, setSubmittedData] = useState<SubmittedData | null>(null);
 
   const handleFormSubmit = (data: SubmittedData) => {
     setSubmittedData(data);
@@ -32,6 +31,7 @@ const Index = () => {
             requirement={submittedData.requirement}
             noteCount={submittedData.noteCount}
             images={submittedData.images}
+            selectedSection={submittedData.selectedSection}
             onBack={handleBack}
           />
         </div>

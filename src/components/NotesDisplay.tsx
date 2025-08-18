@@ -40,13 +40,15 @@ interface NotesDisplayProps {
   requirement: string;
   noteCount: number;
   images: File[];
+  selectedSection: string;
   onBack: () => void;
 }
 
 const generateNotes = (
   requirement: string,
   noteCount: number,
-  images: File[]
+  images: File[],
+  selectedSection: string
 ): Note[] => {
   const notes = [];
   const scripts = Object.values(scriptsData) as ScriptData[];
@@ -76,13 +78,14 @@ export default function NotesDisplay({
   requirement,
   noteCount,
   images,
+  selectedSection,
   onBack,
 }: NotesDisplayProps) {
   const [notes, setNotes] = useState<Note[]>([]);
 
   useEffect(() => {
-    setNotes(generateNotes(requirement, noteCount, images));
-  }, [requirement, noteCount, images]);
+    setNotes(generateNotes(requirement, noteCount, images, selectedSection));
+  }, [requirement, noteCount, images, selectedSection]);
 
   const handleRegenerateText = (noteId: number) => {
     const scripts = Object.values(scriptsData) as ScriptData[];
