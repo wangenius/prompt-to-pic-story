@@ -10,6 +10,11 @@ import {
   Hash,
   MoreVertical,
   Copy,
+  Check,
+  Send,
+  Type,
+  FileText,
+  Image,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -26,15 +31,24 @@ interface ScriptData {
   tags: string[];
 }
 
-interface Note {
+interface NoteOption {
   id: number;
   title: string;
   content: string;
   imageSrc: string;
   tags: string[];
-  likes: number;
-  comments: number;
 }
+
+interface Note {
+  titleOptions: NoteOption[];
+  contentOptions: NoteOption[];
+  imageOptions: NoteOption[];
+  selectedTitle: number;
+  selectedContent: number;
+  selectedImages: number[];
+}
+
+type SelectionTab = "title" | "content" | "image";
 
 interface NotesDisplayProps {
   requirement: string;
@@ -44,34 +58,64 @@ interface NotesDisplayProps {
   onBack: () => void;
 }
 
-const generateNotes = (
+const generateNoteOptions = (
   requirement: string,
   noteCount: number,
   images: File[],
   selectedSection: string
-): Note[] => {
-  const notes = [];
+): Note => {
   const scripts = Object.values(scriptsData) as ScriptData[];
 
-  for (let i = 0; i < noteCount; i++) {
+  // 生成多个标题选项
+  const titleOptions: NoteOption[] = [];
+  for (let i = 0; i < 8; i++) {
     const scriptIndex = i % scripts.length;
     const script = scripts[scriptIndex];
-    // 使用 public 目录中的图片，对应编号 1-20
-    const imageNumber = (i % 20) + 1;
-    const imageSrc = `/${imageNumber}.png`;
-
-    notes.push({
+    titleOptions.push({
       id: i + 1,
       title: script.title,
       content: script.content,
-      imageSrc,
+      imageSrc: `/${(i % 20) + 1}.png`,
       tags: script.tags,
-      likes: Math.floor(Math.random() * 1000) + 100,
-      comments: Math.floor(Math.random() * 100) + 10,
     });
   }
 
-  return notes;
+  // 生成多个文案选项
+  const contentOptions: NoteOption[] = [];
+  for (let i = 0; i < 8; i++) {
+    const scriptIndex = (i + 8) % scripts.length;
+    const script = scripts[scriptIndex];
+    contentOptions.push({
+      id: i + 1,
+      title: script.title,
+      content: script.content,
+      imageSrc: `/${((i + 8) % 20) + 1}.png`,
+      tags: script.tags,
+    });
+  }
+
+  // 生成多个图片选项
+  const imageOptions: NoteOption[] = [];
+  for (let i = 0; i < 12; i++) {
+    const scriptIndex = (i + 16) % scripts.length;
+    const script = scripts[scriptIndex];
+    imageOptions.push({
+      id: i + 1,
+      title: script.title,
+      content: script.content,
+      imageSrc: `/${((i + 16) % 20) + 1}.png`,
+      tags: script.tags,
+    });
+  }
+
+  return {
+    titleOptions,
+    contentOptions,
+    imageOptions,
+    selectedTitle: 1,
+    selectedContent: 1,
+    selectedImages: [1],
+  };
 };
 
 export default function NotesDisplay({
@@ -81,42 +125,87 @@ export default function NotesDisplay({
   selectedSection,
   onBack,
 }: NotesDisplayProps) {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [note, setNote] = useState<Note | null>(null);
+  const [activeTab, setActiveTab] = useState<SelectionTab>("title");
 
   useEffect(() => {
-    setNotes(generateNotes(requirement, noteCount, images, selectedSection));
+    setNote(
+      generateNoteOptions(requirement, noteCount, images, selectedSection)
+    );
   }, [requirement, noteCount, images, selectedSection]);
 
-  const handleRegenerateText = (noteId: number) => {
-    const scripts = Object.values(scriptsData) as ScriptData[];
-    setNotes(
-      notes.map((note) => {
-        if (note.id === noteId) {
-          const randomScript = scripts[Math.floor(Math.random() * scripts.length)];
-          return { 
-            ...note, 
-            title: randomScript.title, 
-            content: randomScript.content,
-            tags: randomScript.tags
-          };
-        }
-        return note;
-      })
-    );
+  const handleSelectTitle = (titleId: number) => {
+    if (note) {
+      setNote({ ...note, selectedTitle: titleId });
+    }
   };
 
-  const handleRegenerateImage = (noteId: number) => {
-    setNotes(
-      notes.map((note) => {
-        if (note.id === noteId) {
-          // 随机选择一个 1-20 的图片
-          const newImageNumber = Math.floor(Math.random() * 20) + 1;
-          const newImageSrc = `/${newImageNumber}.png`;
-          return { ...note, imageSrc: newImageSrc };
-        }
-        return note;
-      })
-    );
+  const handleSelectContent = (contentId: number) => {
+    if (note) {
+      setNote({ ...note, selectedContent: contentId });
+    }
+  };
+
+  const handleSelectImage = (imageId: number) => {
+    if (note) {
+      const newSelectedImages = note.selectedImages.includes(imageId)
+        ? note.selectedImages.filter((id) => id !== imageId)
+        : [...note.selectedImages, imageId];
+      setNote({ ...note, selectedImages: newSelectedImages });
+    }
+  };
+
+  const handleRegenerateOptions = (type: "title" | "content" | "image") => {
+    if (!note) return;
+
+    const scripts = Object.values(scriptsData) as ScriptData[];
+
+    if (type === "title") {
+      // 生成更多标题选项
+      const newTitleOptions: NoteOption[] = [];
+      for (let i = 0; i < 8; i++) {
+        const randomScript =
+          scripts[Math.floor(Math.random() * scripts.length)];
+        newTitleOptions.push({
+          id: i + 1,
+          title: randomScript.title,
+          content: randomScript.content,
+          imageSrc: `/${Math.floor(Math.random() * 20) + 1}.png`,
+          tags: randomScript.tags,
+        });
+      }
+      setNote({ ...note, titleOptions: newTitleOptions });
+    } else if (type === "content") {
+      // 生成更多文案选项
+      const newContentOptions: NoteOption[] = [];
+      for (let i = 0; i < 8; i++) {
+        const randomScript =
+          scripts[Math.floor(Math.random() * scripts.length)];
+        newContentOptions.push({
+          id: i + 1,
+          title: randomScript.title,
+          content: randomScript.content,
+          imageSrc: `/${Math.floor(Math.random() * 20) + 1}.png`,
+          tags: randomScript.tags,
+        });
+      }
+      setNote({ ...note, contentOptions: newContentOptions });
+    } else if (type === "image") {
+      // 生成更多图片选项
+      const newImageOptions: NoteOption[] = [];
+      for (let i = 0; i < 12; i++) {
+        const randomScript =
+          scripts[Math.floor(Math.random() * scripts.length)];
+        newImageOptions.push({
+          id: i + 1,
+          title: randomScript.title,
+          content: randomScript.content,
+          imageSrc: `/${Math.floor(Math.random() * 20) + 1}.png`,
+          tags: randomScript.tags,
+        });
+      }
+      setNote({ ...note, imageOptions: newImageOptions });
+    }
   };
 
   const handleDownload = () => {
@@ -129,150 +218,264 @@ export default function NotesDisplay({
     console.log("分享笔记");
   };
 
+  const handlePublish = () => {
+    if (!note) return;
+
+    const selectedTitleOption = note.titleOptions.find(
+      (opt) => opt.id === note.selectedTitle
+    );
+    const selectedContentOption = note.contentOptions.find(
+      (opt) => opt.id === note.selectedContent
+    );
+    const selectedImageOptions = note.imageOptions.filter((opt) =>
+      note.selectedImages.includes(opt.id)
+    );
+
+    // 构建发布数据
+    const publishData = {
+      title: selectedTitleOption?.title,
+      content: selectedContentOption?.content,
+      images: selectedImageOptions.map((opt) => opt.imageSrc),
+      tags: selectedTitleOption?.tags || [],
+      timestamp: new Date().toISOString(),
+    };
+
+    console.log("发布笔记数据:", publishData);
+
+    // 这里可以添加实际的发布逻辑，比如：
+    // - 调用API发布到小红书
+    // - 保存到本地数据库
+    // - 发送到其他平台
+
+    // 模拟发布成功
+    alert("笔记发布成功！");
+  };
+
+  if (!note) {
+    return <div>加载中...</div>;
+  }
+
+  const selectedTitleOption = note.titleOptions.find(
+    (opt) => opt.id === note.selectedTitle
+  );
+  const selectedContentOption = note.contentOptions.find(
+    (opt) => opt.id === note.selectedContent
+  );
+  const selectedImageOptions = note.imageOptions.filter((opt) =>
+    note.selectedImages.includes(opt.id)
+  );
+
   return (
-    <div className="space-y-8">
-      {/* 标题区域 */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center gap-3">
-          <div className="p-3 bg-gradient-primary rounded-xl animate-pulse-glow">
-            <BookOpen className="h-8 w-8 text-primary-foreground" />
-          </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            小红书图文笔记
-          </h1>
-        </div>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          基于您的需求，我们为您生成了 {noteCount} 份小红书风格的图文笔记
-        </p>
-      </div>
-
-      {/* 操作按钮 */}
-      <div className="flex flex-wrap justify-center gap-4">
-        <Button
-          variant="outline"
-          onClick={onBack}
-          className="border-primary/40 hover:bg-primary/10"
-        >
-          返回编辑
-        </Button>
-        <Button
-          onClick={handleDownload}
-          className="bg-gradient-primary hover:shadow-glow transition-all duration-300"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          保存全部
-        </Button>
-      </div>
-
-      {/* 图文笔记展示 */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {notes.map((note) => (
-          <Card
-            key={note.id}
-            className="overflow-hidden bg-gradient-card backdrop-blur-sm border-primary/20 shadow-card hover:shadow-elegant transition-all duration-300 group"
-          >
-            {/* 笔记图片 */}
-            <div className="relative aspect-[3/4] overflow-hidden">
-              <img
-                src={note.imageSrc}
-                alt={note.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-              />
-              <div className="absolute top-3 right-3">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white border-0"
-                  onClick={() => {
-                    // 复制图片到剪贴板
-                    const img = new Image();
-                    img.crossOrigin = "anonymous";
-                    img.onload = () => {
-                      const canvas = document.createElement('canvas');
-                      canvas.width = img.width;
-                      canvas.height = img.height;
-                      const ctx = canvas.getContext('2d');
-                      if (ctx) {
-                        ctx.drawImage(img, 0, 0);
-                        canvas.toBlob((blob) => {
-                          if (blob) {
-                            const item = new ClipboardItem({ 'image/png': blob });
-                            navigator.clipboard.write([item]).then(() => {
-                              console.log('图片已复制到剪贴板');
-                            });
-                          }
-                        });
-                      }
-                    };
-                    img.src = note.imageSrc;
-                  }}
+    <div className="bg-background">
+      {/* 主要内容区域 */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* 左侧选择栏 */}
+          <div className="lg:col-span-1">
+            <div className="bg-card rounded-lg border">
+              {/* 简约导航 */}
+              <div className="flex border-b">
+                <button
+                  onClick={() => setActiveTab("title")}
+                  className={`flex-1 py-2 px-3 text-sm transition-colors ${
+                    activeTab === "title"
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  <Copy className="h-3 w-3" />
+                  标题
+                </button>
+                <button
+                  onClick={() => setActiveTab("content")}
+                  className={`flex-1 py-2 px-3 text-sm transition-colors ${
+                    activeTab === "content"
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  内容
+                </button>
+                <button
+                  onClick={() => setActiveTab("image")}
+                  className={`flex-1 py-2 px-3 text-sm transition-colors ${
+                    activeTab === "image"
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  图片
+                </button>
+              </div>
+
+              {/* 选择栏内容 */}
+              <div className="p-3">
+                {/* 生成按钮 */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleRegenerateOptions(activeTab)}
+                  className="w-full mb-3"
+                >
+                  更多生成
                 </Button>
-              </div>
-            </div>
 
-            {/* 笔记内容 */}
-            <div className="p-6 space-y-4">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="flex-grow font-semibold text-lg leading-tight line-clamp-2">
-                  {note.title}
-                </h3>
-              </div>
-
-              <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3">
-                {note.content}
-              </p>
-
-              {/* 标签 */}
-              <div className="flex flex-wrap gap-2">
-                {note.tags.map((tag, tagIndex) => (
-                  <Badge
-                    key={tagIndex}
-                    variant="secondary"
-                    className="text-xs bg-primary/10 text-primary hover:bg-primary/20"
-                  >
-                    <Hash className="h-3 w-3 mr-1" />
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-
-              {/* 互动数据 */}
-              <div className="flex items-center gap-4 w-full justify-between">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="text-xs text-primary hover:bg-primary/10"
+                {/* 选项列表 */}
+                <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                  {activeTab === "title" &&
+                    note.titleOptions.map((option) => (
+                      <div
+                        key={option.id}
+                        className={`p-2 rounded-md cursor-pointer transition-colors ${
+                          note.selectedTitle === option.id
+                            ? "bg-primary/10 border border-primary/20"
+                            : "hover:bg-muted/50"
+                        }`}
+                        onClick={() => handleSelectTitle(option.id)}
                       >
-                      重新生成
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem
-                      onClick={() => handleRegenerateText(note.id)}
-                    >
-                      重新生成文案
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleRegenerateImage(note.id)}
-                    >
-                      重新生成图片
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-xs text-primary hover:bg-primary/10"
-                >
-                  复制
-                </Button>
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm line-clamp-2 flex-1">
+                            {option.title}
+                          </p>
+                          {note.selectedTitle === option.id && (
+                            <Check className="h-3 w-3 text-primary flex-shrink-0 ml-2" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                  {activeTab === "content" &&
+                    note.contentOptions.map((option) => (
+                      <div
+                        key={option.id}
+                        className={`p-2 rounded-md cursor-pointer transition-colors ${
+                          note.selectedContent === option.id
+                            ? "bg-primary/10 border border-primary/20"
+                            : "hover:bg-muted/50"
+                        }`}
+                        onClick={() => handleSelectContent(option.id)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm line-clamp-3 flex-1">
+                            {option.content}
+                          </p>
+                          {note.selectedContent === option.id && (
+                            <Check className="h-3 w-3 text-primary flex-shrink-0 ml-2" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                  {activeTab === "image" && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {note.imageOptions.map((option) => (
+                        <div
+                          key={option.id}
+                          className={`relative aspect-square cursor-pointer transition-all ${
+                            note.selectedImages.includes(option.id)
+                              ? "ring-2 ring-primary"
+                              : "hover:opacity-80"
+                          }`}
+                          onClick={() => handleSelectImage(option.id)}
+                        >
+                          <img
+                            src={option.imageSrc}
+                            alt={`图片选项 ${option.id}`}
+                            className="w-full h-full object-cover rounded-md"
+                          />
+                          {note.selectedImages.includes(option.id) && (
+                            <div className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5">
+                              <Check className="h-2 w-2" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </Card>
-        ))}
+          </div>
+
+          {/* 右侧预览区域 */}
+          <div className="lg:col-span-3 space-y-2">
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                返回
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleDownload}
+                className="bg-primary hover:bg-primary/90"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                保存
+              </Button>
+              <Button
+                size="sm"
+                onClick={handlePublish}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Send className="h-4 w-4 mr-1" />
+                发布
+              </Button>
+            </div>
+            <div className="bg-card rounded-lg border p-4">
+              <h2 className="text-sm font-medium text-muted-foreground mb-4">
+                预览
+              </h2>
+
+              {/* 图片预览 */}
+              {selectedImageOptions.length > 0 && (
+                <div className="flex gap-4 overflow-x-auto mb-4">
+                  {selectedImageOptions.map((imageOption) => (
+                    <div
+                      key={imageOption.id}
+                      className="relative w-64 h-80 flex-shrink-0 overflow-hidden rounded-md"
+                    >
+                      <img
+                        src={imageOption.imageSrc}
+                        alt={`预览图片 ${imageOption.id}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 内容预览 */}
+              <div className="space-y-3">
+                {selectedTitleOption && (
+                  <h3 className="font-medium text-base">
+                    {selectedTitleOption.title}
+                  </h3>
+                )}
+                {selectedContentOption && (
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {selectedContentOption.content}
+                  </p>
+                )}
+                {selectedTitleOption?.tags &&
+                  selectedTitleOption.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {selectedTitleOption.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="text-xs bg-muted px-2 py-1 rounded-md text-muted-foreground"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
