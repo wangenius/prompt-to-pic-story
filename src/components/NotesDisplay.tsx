@@ -1,29 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Download,
-  Share2,
-  BookOpen,
-  Heart,
-  MessageCircle,
-  Hash,
-  MoreVertical,
-  Copy,
-  Check,
-  Send,
-  Type,
-  FileText,
-  Image,
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Download, Check, Send } from "lucide-react";
 import { useState, useEffect } from "react";
-import scriptsData from "@/assets/scripts.json";
+import scriptsData from "@/assets/outdoor-vibe.json";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -149,7 +129,7 @@ export default function NotesDisplay({
       const selectedContentOption = note.contentOptions.find(
         (opt) => opt.id === note.selectedContent
       );
-      
+
       if (selectedTitleOption) {
         setEditedTitle(selectedTitleOption.title);
         setEditedTags([...selectedTitleOption.tags]);
@@ -201,9 +181,9 @@ export default function NotesDisplay({
           tags: randomScript.tags,
         });
       }
-      setNote({ 
-        ...note, 
-        titleOptions: [...note.titleOptions, ...newTitleOptions] 
+      setNote({
+        ...note,
+        titleOptions: [...note.titleOptions, ...newTitleOptions],
       });
     } else if (type === "content") {
       // 生成更多文案选项，添加到现有选项后面
@@ -220,9 +200,9 @@ export default function NotesDisplay({
           tags: randomScript.tags,
         });
       }
-      setNote({ 
-        ...note, 
-        contentOptions: [...note.contentOptions, ...newContentOptions] 
+      setNote({
+        ...note,
+        contentOptions: [...note.contentOptions, ...newContentOptions],
       });
     } else if (type === "image") {
       // 生成更多图片选项，添加到现有选项后面
@@ -239,9 +219,9 @@ export default function NotesDisplay({
           tags: randomScript.tags,
         });
       }
-      setNote({ 
-        ...note, 
-        imageOptions: [...note.imageOptions, ...newImageOptions] 
+      setNote({
+        ...note,
+        imageOptions: [...note.imageOptions, ...newImageOptions],
       });
     }
   };
@@ -265,16 +245,19 @@ export default function NotesDisplay({
 
     // 构建发布数据，使用编辑后的内容
     const publishData = {
-      title: editedTitle || note.titleOptions.find(
-        (opt) => opt.id === note.selectedTitle
-      )?.title,
-      content: editedContent || note.contentOptions.find(
-        (opt) => opt.id === note.selectedContent
-      )?.content,
+      title:
+        editedTitle ||
+        note.titleOptions.find((opt) => opt.id === note.selectedTitle)?.title,
+      content:
+        editedContent ||
+        note.contentOptions.find((opt) => opt.id === note.selectedContent)
+          ?.content,
       images: selectedImageOptions.map((opt) => opt.imageSrc),
-      tags: editedTags.length > 0 ? editedTags : note.titleOptions.find(
-        (opt) => opt.id === note.selectedTitle
-      )?.tags || [],
+      tags:
+        editedTags.length > 0
+          ? editedTags
+          : note.titleOptions.find((opt) => opt.id === note.selectedTitle)
+              ?.tags || [],
       timestamp: new Date().toISOString(),
     };
 
@@ -297,7 +280,7 @@ export default function NotesDisplay({
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setEditedTags(editedTags.filter(tag => tag !== tagToRemove));
+    setEditedTags(editedTags.filter((tag) => tag !== tagToRemove));
   };
 
   if (!note) {
@@ -509,7 +492,7 @@ export default function NotesDisplay({
                     className="w-full"
                   />
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-muted-foreground mb-2 block">
                     内容
@@ -521,7 +504,7 @@ export default function NotesDisplay({
                     className="w-full min-h-[100px]"
                   />
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-muted-foreground mb-2 block">
                     标签
@@ -533,7 +516,7 @@ export default function NotesDisplay({
                       placeholder="添加新标签..."
                       className="flex-1"
                       onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === "Enter") {
                           e.preventDefault();
                           handleAddTag();
                         }

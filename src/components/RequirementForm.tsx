@@ -1,16 +1,28 @@
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, Sparkles, Mountain, Camera, ShoppingBag, Coffee } from 'lucide-react';
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Upload,
+  FileText,
+  Sparkles,
+  Mountain,
+  Camera,
+  ShoppingBag,
+  Coffee,
+} from "lucide-react";
 
 interface RequirementFormProps {
-  onSubmit: (data: { requirement: string; images: File[]; selectedSection: string }) => void;
+  onSubmit: (data: {
+    requirement: string;
+    images: File[];
+    selectedSection: string;
+  }) => void;
 }
 
-type SectionType = 'outdoor-wild' | 'outdoor-guide' | 'life-sam' | 'life-taste';
+type SectionType = "outdoor-wild" | "outdoor-guide" | "life-sam" | "life-taste";
 
 interface SectionConfig {
   id: SectionType;
@@ -24,54 +36,58 @@ interface SectionConfig {
 
 const sections: SectionConfig[] = [
   {
-    id: 'outdoor-wild',
-    title: '户外线-旷野回响',
-    subtitle: '综艺图片+文案',
-    icon: <Mountain className="h-5 w-5" />,
-    description: '上传综艺图片并输入相关文案',
-    hasImageUpload: true,
-    hasTextInput: true
-  },
-  {
-    id: 'outdoor-guide',
-    title: '户外线-氛围出片指南',
-    subtitle: '文案',
+    id: "outdoor-guide",
+    title: "户外线-氛围出片指南",
+    subtitle: "文案",
     icon: <Camera className="h-5 w-5" />,
-    description: '输入氛围出片相关的文案内容',
+    description: "输入氛围出片相关的文案内容",
     hasImageUpload: false,
-    hasTextInput: true
+    hasTextInput: true,
   },
   {
-    id: 'life-sam',
-    title: '精致生活线-入驻山姆',
-    subtitle: '山姆会员店相关内容',
+    id: "outdoor-wild",
+    title: "户外线-旷野回响",
+    subtitle: "综艺图片+文案",
+    icon: <Mountain className="h-5 w-5" />,
+    description: "上传综艺图片并输入相关文案",
+    hasImageUpload: true,
+    hasTextInput: true,
+  },
+
+  {
+    id: "life-sam",
+    title: "精致生活线-入驻山姆",
+    subtitle: "山姆会员店相关内容",
     icon: <ShoppingBag className="h-5 w-5" />,
-    description: '生成山姆会员店相关的精致生活内容',
+    description: "生成山姆会员店相关的精致生活内容",
     hasImageUpload: false,
-    hasTextInput: true
+    hasTextInput: true,
   },
   {
-    id: 'life-taste',
-    title: '精致生活线-赏味一刻',
-    subtitle: '美食体验内容',
+    id: "life-taste",
+    title: "精致生活线-赏味一刻",
+    subtitle: "美食体验内容",
     icon: <Coffee className="h-5 w-5" />,
-    description: '生成美食体验相关的精致生活内容',
+    description: "生成美食体验相关的精致生活内容",
     hasImageUpload: false,
-    hasTextInput: true
-  }
+    hasTextInput: true,
+  },
 ];
 
 export default function RequirementForm({ onSubmit }: RequirementFormProps) {
-  const [selectedSection, setSelectedSection] = useState<SectionType | null>(null);
-  const [requirement, setRequirement] = useState('');
+  const [selectedSection, setSelectedSection] =
+    useState<SectionType>("outdoor-guide");
+  const [requirement, setRequirement] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const selectedSectionConfig = selectedSection ? sections.find(s => s.id === selectedSection) : null;
+  const selectedSectionConfig = selectedSection
+    ? sections.find((s) => s.id === selectedSection)
+    : null;
 
   const handleImageUpload = (files: FileList | null) => {
     if (files) {
-      setImages(prev => [...prev, ...Array.from(files)]);
+      setImages((prev) => [...prev, ...Array.from(files)]);
     }
   };
 
@@ -97,18 +113,18 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
     }
   };
 
-
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
       {/* 左侧：板块选择 */}
       <div className="lg:col-span-2">
         <div className="bg-white h-full p-4">
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">内容板块</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              内容板块
+            </h3>
             <p className="text-sm text-gray-500">选择您要生成的内容类型</p>
           </div>
-          
+
           <nav className="space-y-2">
             {sections.map((section) => (
               <button
@@ -116,33 +132,49 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
                 onClick={() => setSelectedSection(section.id)}
                 className={`
                   w-full text-left p-3 rounded-lg transition-all duration-200 group
-                  ${selectedSection === section.id 
-                    ? 'bg-blue-50 border border-blue-200 shadow-sm' 
-                    : 'hover:bg-gray-50 border border-transparent'
+                  ${
+                    selectedSection === section.id
+                      ? "bg-blue-50 border border-blue-200 shadow-sm"
+                      : "hover:bg-gray-50 border border-transparent"
                   }
                 `}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`
+                  <div
+                    className={`
                     p-2 rounded-lg transition-colors
-                    ${selectedSection === section.id 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200'
+                    ${
+                      selectedSection === section.id
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 text-gray-600 group-hover:bg-gray-200"
                     }
-                  `}>
+                  `}
+                  >
                     {section.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className={`
+                    <div
+                      className={`
                       font-medium text-sm truncate
-                      ${selectedSection === section.id ? 'text-blue-900' : 'text-gray-900'}
-                    `}>
+                      ${
+                        selectedSection === section.id
+                          ? "text-blue-900"
+                          : "text-gray-900"
+                      }
+                    `}
+                    >
                       {section.title}
                     </div>
-                    <div className={`
+                    <div
+                      className={`
                       text-xs truncate
-                      ${selectedSection === section.id ? 'text-blue-600' : 'text-gray-500'}
-                    `}>
+                      ${
+                        selectedSection === section.id
+                          ? "text-blue-600"
+                          : "text-gray-500"
+                      }
+                    `}
+                    >
                       {section.subtitle}
                     </div>
                   </div>
@@ -165,7 +197,10 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-blue-600" />
-                  <Label htmlFor="requirement" className="text-lg font-semibold">
+                  <Label
+                    htmlFor="requirement"
+                    className="text-lg font-semibold"
+                  >
                     {selectedSectionConfig.title} - 文案内容
                   </Label>
                 </div>
@@ -190,13 +225,14 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
                     综艺图片上传 ({images.length} 张)
                   </Label>
                 </div>
-                
+
                 <div
                   className={`
                     border-2 border-dashed rounded-lg p-6 text-center transition-all
-                    ${isDragOver 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-300 hover:border-blue-400'
+                    ${
+                      isDragOver
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300 hover:border-blue-400"
                     }
                   `}
                   onDragOver={handleDragOver}
@@ -205,7 +241,9 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
                 >
                   <Upload className="h-8 w-8 mx-auto mb-3 text-gray-400" />
                   <p className="text-base mb-1">拖拽综艺图片到此处或点击上传</p>
-                  <p className="text-sm text-gray-500 mb-3">支持 JPG、PNG、GIF 格式</p>
+                  <p className="text-sm text-gray-500 mb-3">
+                    支持 JPG、PNG、GIF 格式
+                  </p>
                   <input
                     type="file"
                     multiple
@@ -216,7 +254,9 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
                   />
                   <Button
                     variant="outline"
-                    onClick={() => document.getElementById('image-upload')?.click()}
+                    onClick={() =>
+                      document.getElementById("image-upload")?.click()
+                    }
                     className="border-gray-300 hover:bg-gray-50"
                   >
                     选择文件
@@ -236,7 +276,11 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
                           variant="destructive"
                           size="sm"
                           className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity text-xs"
-                          onClick={() => setImages(prev => prev.filter((_, i) => i !== index))}
+                          onClick={() =>
+                            setImages((prev) =>
+                              prev.filter((_, i) => i !== index)
+                            )
+                          }
                         >
                           ×
                         </Button>
