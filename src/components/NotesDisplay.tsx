@@ -4,11 +4,19 @@ import { useState, useEffect } from "react";
 import scriptsData from "@/assets/outdoor-vibe.json";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+
+interface Strategy {
+  style: string;
+  view: string;
+  target: string;
+}
 
 interface ScriptData {
   title: string;
   content: string;
   tags: string[];
+  strategy: Strategy;
 }
 
 interface NoteOption {
@@ -17,6 +25,7 @@ interface NoteOption {
   content: string;
   imageSrc: string;
   tags: string[];
+  strategy: Strategy;
 }
 
 interface Note {
@@ -55,6 +64,7 @@ const generateNoteOptions = (
       content: script.content,
       imageSrc: `/${(i % 20) + 1}.png`,
       tags: script.tags,
+      strategy: script.strategy,
     });
   }
 
@@ -69,6 +79,7 @@ const generateNoteOptions = (
       content: script.content,
       imageSrc: `/${((i + 8) % 20) + 1}.png`,
       tags: script.tags,
+      strategy: script.strategy,
     });
   }
 
@@ -78,6 +89,29 @@ const generateNoteOptions = (
     selectedNote: 1,
     selectedImages: [1],
   };
+};
+
+// 策略颜色映射
+const getStrategyColor = (type: string, value: string) => {
+  const colorMap: Record<string, Record<string, string>> = {
+    style: {
+      "适中型": "bg-blue-100 text-blue-800",
+      "创新型": "bg-green-100 text-green-800", 
+      "保守型": "bg-gray-100 text-gray-800"
+    },
+    view: {
+      "精致白领": "bg-purple-100 text-purple-800",
+      "社交达人": "bg-pink-100 text-pink-800",
+      "户外玩家": "bg-orange-100 text-orange-800"
+    },
+    target: {
+      "深度种草": "bg-red-100 text-red-800",
+      "激发好奇": "bg-yellow-100 text-yellow-800",
+      "号召行动": "bg-indigo-100 text-indigo-800"
+    }
+  };
+  
+  return colorMap[type]?.[value] || "bg-gray-100 text-gray-800";
 };
 
 export default function NotesDisplay({
@@ -148,6 +182,7 @@ export default function NotesDisplay({
           content: randomScript.content,
           imageSrc: `/${Math.floor(Math.random() * 20) + 1}.png`,
           tags: randomScript.tags,
+          strategy: randomScript.strategy,
         });
       }
       setNote({
@@ -167,6 +202,7 @@ export default function NotesDisplay({
           content: randomScript.content,
           imageSrc: `/${Math.floor(Math.random() * 20) + 1}.png`,
           tags: randomScript.tags,
+          strategy: randomScript.strategy,
         });
       }
       setNote({
@@ -246,14 +282,14 @@ export default function NotesDisplay({
   return (
     <div className="bg-background min-h-screen">
       {/* 主要内容区域 */}
-      <div className="flex gap-4 max-w-7xl mx-auto px-4 py-6 h-full">
+      <div className="flex gap-4 max-w-7xl mx-auto px-4 py-6 h-screen">
         {/* 左侧选择栏 */}
-        <div className="flex-none w-72 bg-card rounded-lg border flex flex-col">
+        <div className="flex-none w-80 bg-card rounded-lg border flex flex-col h-full">
           {/* 简约导航 */}
-          <div className="flex border-b">
+          <div className="flex border-b flex-shrink-0">
             <button
               onClick={() => setActiveTab("note")}
-              className={`flex-1 py-2 px-3 text-sm transition-colors ${
+              className={`flex-1 py-3 px-4 text-sm transition-colors ${
                 activeTab === "note"
                   ? "text-primary border-b-2 border-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -263,7 +299,7 @@ export default function NotesDisplay({
             </button>
             <button
               onClick={() => setActiveTab("image")}
-              className={`flex-1 py-2 px-3 text-sm transition-colors ${
+              className={`flex-1 py-3 px-4 text-sm transition-colors ${
                 activeTab === "image"
                   ? "text-primary border-b-2 border-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -274,32 +310,34 @@ export default function NotesDisplay({
           </div>
 
           {/* 选择栏内容 */}
-          <div className="p-3 flex-1">
+          <div className="flex-1 flex flex-col min-h-0">
             {/* 生成按钮 */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleRegenerateOptions(activeTab)}
-              className="w-full mb-3"
-            >
-              更多生成
-            </Button>
+            <div className="p-4 pb-2 flex-shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleRegenerateOptions(activeTab)}
+                className="w-full"
+              >
+                更多生成
+              </Button>
+            </div>
 
             {/* 选项列表 */}
-            <div className="space-y-2 max-h-[500px] overflow-y-auto">
+            <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
               {activeTab === "note" &&
                 note.noteOptions.map((option) => (
                   <div
                     key={option.id}
-                    className={`p-2 rounded-md cursor-pointer transition-colors ${
+                    className={`p-2 rounded-lg cursor-pointer transition-colors border ${
                       note.selectedNote === option.id
-                        ? "bg-primary/10 border border-primary/20"
-                        : "hover:bg-muted/50"
+                        ? "bg-primary/10 border-primary/30"
+                        : "hover:bg-muted/50 border-transparent"
                     }`}
                     onClick={() => handleSelectNote(option.id)}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                    <div className="flex items-start justify-between mb-1">
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium line-clamp-1 mb-1">
                           {option.title}
                         </p>
@@ -308,8 +346,30 @@ export default function NotesDisplay({
                         </p>
                       </div>
                       {note.selectedNote === option.id && (
-                        <Check className="h-3 w-3 text-primary flex-shrink-0 ml-2" />
+                        <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />
                       )}
+                    </div>
+                    
+                    {/* 策略标签 */}
+                    <div className="flex flex-wrap gap-1">
+                      <Badge 
+                        variant="secondary" 
+                        className={`text-xs px-1.5 py-0.5 ${getStrategyColor('style', option.strategy.style)}`}
+                      >
+                        {option.strategy.style}
+                      </Badge>
+                      <Badge 
+                        variant="secondary" 
+                        className={`text-xs px-1.5 py-0.5 ${getStrategyColor('view', option.strategy.view)}`}
+                      >
+                        {option.strategy.view}
+                      </Badge>
+                      <Badge 
+                        variant="secondary" 
+                        className={`text-xs px-1.5 py-0.5 ${getStrategyColor('target', option.strategy.target)}`}
+                      >
+                        {option.strategy.target}
+                      </Badge>
                     </div>
                   </div>
                 ))}
@@ -319,7 +379,7 @@ export default function NotesDisplay({
                   {note.imageOptions.map((option) => (
                     <div
                       key={option.id}
-                      className={`relative aspect-square cursor-pointer transition-all ${
+                      className={`relative aspect-square cursor-pointer transition-all rounded-lg overflow-hidden ${
                         note.selectedImages.includes(option.id)
                           ? "ring-2 ring-primary"
                           : "hover:opacity-80"
@@ -329,7 +389,7 @@ export default function NotesDisplay({
                       <img
                         src={option.imageSrc}
                         alt={`图片选项 ${option.id}`}
-                        className="w-full h-full object-cover rounded-md"
+                        className="w-full h-full object-cover"
                       />
                       {note.selectedImages.includes(option.id) && (
                         <div className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5">
@@ -345,8 +405,8 @@ export default function NotesDisplay({
         </div>
 
         {/* 右侧预览区域 */}
-        <div className="flex-1 flex flex-col gap-2">
-          <div className="flex gap-2 justify-end">
+        <div className="flex-1 flex flex-col gap-4 h-full max-w-2xl">
+          <div className="flex gap-2 justify-end flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
@@ -372,96 +432,129 @@ export default function NotesDisplay({
               发布
             </Button>
           </div>
-          <div className="bg-card rounded-lg border p-4">
-            <h2 className="text-sm font-medium text-muted-foreground mb-4">
+          
+          <div className="bg-card rounded-lg border p-6 flex-1 flex flex-col overflow-hidden">
+            <h2 className="text-lg font-medium text-foreground mb-4 flex-shrink-0">
               预览
             </h2>
 
-            {/* 图片预览 */}
-            {selectedImageOptions.length > 0 && (
-              <div className="flex gap-4 overflow-x-auto mb-4">
-                {selectedImageOptions.map((imageOption) => (
-                  <div
-                    key={imageOption.id}
-                    className="relative w-64 h-80 flex-shrink-0 overflow-hidden rounded-md"
-                  >
-                    <img
-                      src={imageOption.imageSrc}
-                      alt={`预览图片 ${imageOption.id}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 内容编辑 */}
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                  标题
-                </label>
-                <Input
-                  value={editedTitle}
-                  onChange={(e) => setEditedTitle(e.target.value)}
-                  placeholder="输入标题..."
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                  内容
-                </label>
-                <Textarea
-                  value={editedContent}
-                  onChange={(e) => setEditedContent(e.target.value)}
-                  placeholder="输入内容..."
-                  className="w-full min-h-[100px]"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                  标签
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="添加新标签..."
-                    className="flex-1"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddTag();
-                      }
-                    }}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={handleAddTag}
-                    disabled={!newTag.trim()}
-                  >
-                    添加
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {editedTags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="text-xs bg-muted px-2 py-1 rounded-md text-muted-foreground flex items-center gap-1"
+            <div className="flex-1 overflow-y-auto space-y-6 px-2">
+              {/* 图片预览 */}
+              {selectedImageOptions.length > 0 && (
+                <div className="flex gap-4 overflow-x-auto pb-2">
+                  {selectedImageOptions.map((imageOption) => (
+                    <div
+                      key={imageOption.id}
+                      className="relative w-64 h-80 flex-shrink-0 overflow-hidden rounded-lg"
                     >
-                      {tag}
-                      <button
-                        onClick={() => handleRemoveTag(tag)}
-                        className="hover:text-destructive"
-                      >
-                        ×
-                      </button>
-                    </span>
+                      <img
+                        src={imageOption.imageSrc}
+                        alt={`预览图片 ${imageOption.id}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   ))}
                 </div>
+              )}
+
+              {/* 内容编辑 */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    标题
+                  </label>
+                  <Input
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    placeholder="输入标题..."
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    内容
+                  </label>
+                  <Textarea
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    placeholder="输入内容..."
+                    className="w-full min-h-[200px] resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    标签
+                  </label>
+                  <div className="flex gap-2 mb-3">
+                    <Input
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      placeholder="添加新标签..."
+                      className="flex-1"
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddTag();
+                        }
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleAddTag}
+                      disabled={!newTag.trim()}
+                    >
+                      添加
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {editedTags.map((tag, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="text-xs flex items-center gap-1"
+                      >
+                        {tag}
+                        <button
+                          onClick={() => handleRemoveTag(tag)}
+                          className="hover:text-destructive ml-1"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 当前选中笔记的策略信息 */}
+                {selectedNoteOption && (
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">
+                      策略信息
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge 
+                        variant="outline" 
+                        className={`${getStrategyColor('style', selectedNoteOption.strategy.style)}`}
+                      >
+                        风格: {selectedNoteOption.strategy.style}
+                      </Badge>
+                      <Badge 
+                        variant="outline" 
+                        className={`${getStrategyColor('view', selectedNoteOption.strategy.view)}`}
+                      >
+                        视角: {selectedNoteOption.strategy.view}
+                      </Badge>
+                      <Badge 
+                        variant="outline" 
+                        className={`${getStrategyColor('target', selectedNoteOption.strategy.target)}`}
+                      >
+                        目标: {selectedNoteOption.strategy.target}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
