@@ -244,227 +244,223 @@ export default function NotesDisplay({
   );
 
   return (
-    <div className="bg-background">
+    <div className="bg-background min-h-screen">
       {/* 主要内容区域 */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* 左侧选择栏 */}
-          <div className="lg:col-span-1">
-            <div className="bg-card rounded-lg border">
-              {/* 简约导航 */}
-              <div className="flex border-b">
-                <button
-                  onClick={() => setActiveTab("note")}
-                  className={`flex-1 py-2 px-3 text-sm transition-colors ${
-                    activeTab === "note"
-                      ? "text-primary border-b-2 border-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  笔记
-                </button>
-                <button
-                  onClick={() => setActiveTab("image")}
-                  className={`flex-1 py-2 px-3 text-sm transition-colors ${
-                    activeTab === "image"
-                      ? "text-primary border-b-2 border-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  图片
-                </button>
-              </div>
-
-              {/* 选择栏内容 */}
-              <div className="p-3">
-                {/* 生成按钮 */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleRegenerateOptions(activeTab)}
-                  className="w-full mb-3"
-                >
-                  更多生成
-                </Button>
-
-                {/* 选项列表 */}
-                <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                  {activeTab === "note" &&
-                    note.noteOptions.map((option) => (
-                      <div
-                        key={option.id}
-                        className={`p-2 rounded-md cursor-pointer transition-colors ${
-                          note.selectedNote === option.id
-                            ? "bg-primary/10 border border-primary/20"
-                            : "hover:bg-muted/50"
-                        }`}
-                        onClick={() => handleSelectNote(option.id)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium line-clamp-1 mb-1">
-                              {option.title}
-                            </p>
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {option.content}
-                            </p>
-                          </div>
-                          {note.selectedNote === option.id && (
-                            <Check className="h-3 w-3 text-primary flex-shrink-0 ml-2" />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-
-                  {activeTab === "image" && (
-                    <div className="grid grid-cols-2 gap-2">
-                      {note.imageOptions.map((option) => (
-                        <div
-                          key={option.id}
-                          className={`relative aspect-square cursor-pointer transition-all ${
-                            note.selectedImages.includes(option.id)
-                              ? "ring-2 ring-primary"
-                              : "hover:opacity-80"
-                          }`}
-                          onClick={() => handleSelectImage(option.id)}
-                        >
-                          <img
-                            src={option.imageSrc}
-                            alt={`图片选项 ${option.id}`}
-                            className="w-full h-full object-cover rounded-md"
-                          />
-                          {note.selectedImages.includes(option.id) && (
-                            <div className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5">
-                              <Check className="h-2 w-2" />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+      <div className="flex gap-4 max-w-7xl mx-auto px-4 py-6 h-full">
+        {/* 左侧选择栏 */}
+        <div className="flex-none w-72 bg-card rounded-lg border flex flex-col">
+          {/* 简约导航 */}
+          <div className="flex border-b">
+            <button
+              onClick={() => setActiveTab("note")}
+              className={`flex-1 py-2 px-3 text-sm transition-colors ${
+                activeTab === "note"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              笔记
+            </button>
+            <button
+              onClick={() => setActiveTab("image")}
+              className={`flex-1 py-2 px-3 text-sm transition-colors ${
+                activeTab === "image"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              图片
+            </button>
           </div>
 
-          {/* 右侧预览区域 */}
-          <div className="lg:col-span-3 space-y-2">
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onBack}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                返回
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleDownload}
-                className="bg-primary hover:bg-primary/90"
-              >
-                <Download className="h-4 w-4 mr-1" />
-                保存
-              </Button>
-              <Button
-                size="sm"
-                onClick={handlePublish}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Send className="h-4 w-4 mr-1" />
-                发布
-              </Button>
-            </div>
-            <div className="bg-card rounded-lg border p-4">
-              <h2 className="text-sm font-medium text-muted-foreground mb-4">
-                预览
-              </h2>
+          {/* 选择栏内容 */}
+          <div className="p-3 flex-1">
+            {/* 生成按钮 */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleRegenerateOptions(activeTab)}
+              className="w-full mb-3"
+            >
+              更多生成
+            </Button>
 
-              {/* 图片预览 */}
-              {selectedImageOptions.length > 0 && (
-                <div className="flex gap-4 overflow-x-auto mb-4">
-                  {selectedImageOptions.map((imageOption) => (
+            {/* 选项列表 */}
+            <div className="space-y-2 max-h-[500px] overflow-y-auto">
+              {activeTab === "note" &&
+                note.noteOptions.map((option) => (
+                  <div
+                    key={option.id}
+                    className={`p-2 rounded-md cursor-pointer transition-colors ${
+                      note.selectedNote === option.id
+                        ? "bg-primary/10 border border-primary/20"
+                        : "hover:bg-muted/50"
+                    }`}
+                    onClick={() => handleSelectNote(option.id)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium line-clamp-1 mb-1">
+                          {option.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {option.content}
+                        </p>
+                      </div>
+                      {note.selectedNote === option.id && (
+                        <Check className="h-3 w-3 text-primary flex-shrink-0 ml-2" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+              {activeTab === "image" && (
+                <div className="grid grid-cols-2 gap-2">
+                  {note.imageOptions.map((option) => (
                     <div
-                      key={imageOption.id}
-                      className="relative w-64 h-80 flex-shrink-0 overflow-hidden rounded-md"
+                      key={option.id}
+                      className={`relative aspect-square cursor-pointer transition-all ${
+                        note.selectedImages.includes(option.id)
+                          ? "ring-2 ring-primary"
+                          : "hover:opacity-80"
+                      }`}
+                      onClick={() => handleSelectImage(option.id)}
                     >
                       <img
-                        src={imageOption.imageSrc}
-                        alt={`预览图片 ${imageOption.id}`}
-                        className="w-full h-full object-cover"
+                        src={option.imageSrc}
+                        alt={`图片选项 ${option.id}`}
+                        className="w-full h-full object-cover rounded-md"
                       />
+                      {note.selectedImages.includes(option.id) && (
+                        <div className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5">
+                          <Check className="h-2 w-2" />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
 
-              {/* 内容编辑 */}
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                    标题
-                  </label>
-                  <Input
-                    value={editedTitle}
-                    onChange={(e) => setEditedTitle(e.target.value)}
-                    placeholder="输入标题..."
-                    className="w-full"
-                  />
-                </div>
+        {/* 右侧预览区域 */}
+        <div className="flex-1 flex flex-col gap-2">
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              返回
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleDownload}
+              className="bg-primary hover:bg-primary/90"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              保存
+            </Button>
+            <Button
+              size="sm"
+              onClick={handlePublish}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Send className="h-4 w-4 mr-1" />
+              发布
+            </Button>
+          </div>
+          <div className="bg-card rounded-lg border p-4">
+            <h2 className="text-sm font-medium text-muted-foreground mb-4">
+              预览
+            </h2>
 
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                    内容
-                  </label>
-                  <Textarea
-                    value={editedContent}
-                    onChange={(e) => setEditedContent(e.target.value)}
-                    placeholder="输入内容..."
-                    className="w-full min-h-[100px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                    标签
-                  </label>
-                  <div className="flex gap-2 mb-2">
-                    <Input
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="添加新标签..."
-                      className="flex-1"
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddTag();
-                        }
-                      }}
+            {/* 图片预览 */}
+            {selectedImageOptions.length > 0 && (
+              <div className="flex gap-4 overflow-x-auto mb-4">
+                {selectedImageOptions.map((imageOption) => (
+                  <div
+                    key={imageOption.id}
+                    className="relative w-64 h-80 flex-shrink-0 overflow-hidden rounded-md"
+                  >
+                    <img
+                      src={imageOption.imageSrc}
+                      alt={`预览图片 ${imageOption.id}`}
+                      className="w-full h-full object-cover"
                     />
-                    <Button
-                      size="sm"
-                      onClick={handleAddTag}
-                      disabled={!newTag.trim()}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 内容编辑 */}
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                  标题
+                </label>
+                <Input
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  placeholder="输入标题..."
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                  内容
+                </label>
+                <Textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  placeholder="输入内容..."
+                  className="w-full min-h-[100px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                  标签
+                </label>
+                <div className="flex gap-2 mb-2">
+                  <Input
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    placeholder="添加新标签..."
+                    className="flex-1"
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleAddTag}
+                    disabled={!newTag.trim()}
+                  >
+                    添加
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {editedTags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="text-xs bg-muted px-2 py-1 rounded-md text-muted-foreground flex items-center gap-1"
                     >
-                      添加
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {editedTags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="text-xs bg-muted px-2 py-1 rounded-md text-muted-foreground flex items-center gap-1"
+                      {tag}
+                      <button
+                        onClick={() => handleRemoveTag(tag)}
+                        className="hover:text-destructive"
                       >
-                        {tag}
-                        <button
-                          onClick={() => handleRemoveTag(tag)}
-                          className="hover:text-destructive"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
+                        ×
+                      </button>
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>

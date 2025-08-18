@@ -13,7 +13,9 @@ interface SubmittedData {
 }
 
 const Index = () => {
-  const [submittedData, setSubmittedData] = useState<SubmittedData | null>(null);
+  const [submittedData, setSubmittedData] = useState<SubmittedData | null>(
+    null
+  );
 
   const handleFormSubmit = (data: SubmittedData) => {
     setSubmittedData(data);
@@ -26,15 +28,13 @@ const Index = () => {
   if (submittedData) {
     return (
       <div className="min-h-screen bg-gradient-subtle">
-        <div className="container mx-auto px-4 py-8">
-          <NotesDisplay
-            requirement={submittedData.requirement}
-            noteCount={submittedData.noteCount}
-            images={submittedData.images}
-            selectedSection={submittedData.selectedSection}
-            onBack={handleBack}
-          />
-        </div>
+        <NotesDisplay
+          requirement={submittedData.requirement}
+          noteCount={submittedData.noteCount}
+          images={submittedData.images}
+          selectedSection={submittedData.selectedSection}
+          onBack={handleBack}
+        />
       </div>
     );
   }
