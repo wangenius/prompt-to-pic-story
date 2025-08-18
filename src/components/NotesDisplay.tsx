@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import scriptsData from "@/assets/scripts.json";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ScriptData {
   title: string;
@@ -127,12 +129,36 @@ export default function NotesDisplay({
 }: NotesDisplayProps) {
   const [note, setNote] = useState<Note | null>(null);
   const [activeTab, setActiveTab] = useState<SelectionTab>("title");
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedContent, setEditedContent] = useState("");
+  const [editedTags, setEditedTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
 
   useEffect(() => {
     setNote(
       generateNoteOptions(requirement, noteCount, images, selectedSection)
     );
   }, [requirement, noteCount, images, selectedSection]);
+
+  // 当选中项改变时，更新编辑状态的值
+  useEffect(() => {
+    if (note) {
+      const selectedTitleOption = note.titleOptions.find(
+        (opt) => opt.id === note.selectedTitle
+      );
+      const selectedContentOption = note.contentOptions.find(
+        (opt) => opt.id === note.selectedContent
+      );
+      
+      if (selectedTitleOption) {
+        setEditedTitle(selectedTitleOption.title);
+        setEditedTags([...selectedTitleOption.tags]);
+      }
+      if (selectedContentOption) {
+        setEditedContent(selectedContentOption.content);
+      }
+    }
+  }, [note?.selectedTitle, note?.selectedContent]);
 
   const handleSelectTitle = (titleId: number) => {
     if (note) {
@@ -161,50 +187,62 @@ export default function NotesDisplay({
     const scripts = Object.values(scriptsData) as ScriptData[];
 
     if (type === "title") {
-      // 生成更多标题选项
+      // 生成更多标题选项，添加到现有选项后面
       const newTitleOptions: NoteOption[] = [];
+      const startId = note.titleOptions.length + 1;
       for (let i = 0; i < 8; i++) {
         const randomScript =
           scripts[Math.floor(Math.random() * scripts.length)];
         newTitleOptions.push({
-          id: i + 1,
+          id: startId + i,
           title: randomScript.title,
           content: randomScript.content,
           imageSrc: `/${Math.floor(Math.random() * 20) + 1}.png`,
           tags: randomScript.tags,
         });
       }
-      setNote({ ...note, titleOptions: newTitleOptions });
+      setNote({ 
+        ...note, 
+        titleOptions: [...note.titleOptions, ...newTitleOptions] 
+      });
     } else if (type === "content") {
-      // 生成更多文案选项
+      // 生成更多文案选项，添加到现有选项后面
       const newContentOptions: NoteOption[] = [];
+      const startId = note.contentOptions.length + 1;
       for (let i = 0; i < 8; i++) {
         const randomScript =
           scripts[Math.floor(Math.random() * scripts.length)];
         newContentOptions.push({
-          id: i + 1,
+          id: startId + i,
           title: randomScript.title,
           content: randomScript.content,
           imageSrc: `/${Math.floor(Math.random() * 20) + 1}.png`,
           tags: randomScript.tags,
         });
       }
-      setNote({ ...note, contentOptions: newContentOptions });
+      setNote({ 
+        ...note, 
+        contentOptions: [...note.contentOptions, ...newContentOptions] 
+      });
     } else if (type === "image") {
-      // 生成更多图片选项
+      // 生成更多图片选项，添加到现有选项后面
       const newImageOptions: NoteOption[] = [];
+      const startId = note.imageOptions.length + 1;
       for (let i = 0; i < 12; i++) {
         const randomScript =
           scripts[Math.floor(Math.random() * scripts.length)];
         newImageOptions.push({
-          id: i + 1,
+          id: startId + i,
           title: randomScript.title,
           content: randomScript.content,
           imageSrc: `/${Math.floor(Math.random() * 20) + 1}.png`,
           tags: randomScript.tags,
         });
       }
-      setNote({ ...note, imageOptions: newImageOptions });
+      setNote({ 
+        ...note, 
+        imageOptions: [...note.imageOptions, ...newImageOptions] 
+      });
     }
   };
 
@@ -221,22 +259,22 @@ export default function NotesDisplay({
   const handlePublish = () => {
     if (!note) return;
 
-    const selectedTitleOption = note.titleOptions.find(
-      (opt) => opt.id === note.selectedTitle
-    );
-    const selectedContentOption = note.contentOptions.find(
-      (opt) => opt.id === note.selectedContent
-    );
     const selectedImageOptions = note.imageOptions.filter((opt) =>
       note.selectedImages.includes(opt.id)
     );
 
-    // 构建发布数据
+    // 构建发布数据，使用编辑后的内容
     const publishData = {
-      title: selectedTitleOption?.title,
-      content: selectedContentOption?.content,
+      title: editedTitle || note.titleOptions.find(
+        (opt) => opt.id === note.selectedTitle
+      )?.title,
+      content: editedContent || note.contentOptions.find(
+        (opt) => opt.id === note.selectedContent
+      )?.content,
       images: selectedImageOptions.map((opt) => opt.imageSrc),
-      tags: selectedTitleOption?.tags || [],
+      tags: editedTags.length > 0 ? editedTags : note.titleOptions.find(
+        (opt) => opt.id === note.selectedTitle
+      )?.tags || [],
       timestamp: new Date().toISOString(),
     };
 
@@ -249,6 +287,17 @@ export default function NotesDisplay({
 
     // 模拟发布成功
     alert("笔记发布成功！");
+  };
+
+  const handleAddTag = () => {
+    if (newTag.trim() && !editedTags.includes(newTag.trim())) {
+      setEditedTags([...editedTags, newTag.trim()]);
+      setNewTag("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setEditedTags(editedTags.filter(tag => tag !== tagToRemove));
   };
 
   if (!note) {
@@ -447,31 +496,74 @@ export default function NotesDisplay({
                 </div>
               )}
 
-              {/* 内容预览 */}
+              {/* 内容编辑 */}
               <div className="space-y-3">
-                {selectedTitleOption && (
-                  <h3 className="font-medium text-base">
-                    {selectedTitleOption.title}
-                  </h3>
-                )}
-                {selectedContentOption && (
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {selectedContentOption.content}
-                  </p>
-                )}
-                {selectedTitleOption?.tags &&
-                  selectedTitleOption.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {selectedTitleOption.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="text-xs bg-muted px-2 py-1 rounded-md text-muted-foreground"
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                    标题
+                  </label>
+                  <Input
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    placeholder="输入标题..."
+                    className="w-full"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                    内容
+                  </label>
+                  <Textarea
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    placeholder="输入内容..."
+                    className="w-full min-h-[100px]"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                    标签
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      placeholder="添加新标签..."
+                      className="flex-1"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddTag();
+                        }
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleAddTag}
+                      disabled={!newTag.trim()}
+                    >
+                      添加
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {editedTags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="text-xs bg-muted px-2 py-1 rounded-md text-muted-foreground flex items-center gap-1"
+                      >
+                        {tag}
+                        <button
+                          onClick={() => handleRemoveTag(tag)}
+                          className="hover:text-destructive"
                         >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
