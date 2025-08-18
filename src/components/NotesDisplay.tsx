@@ -1,6 +1,4 @@
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Download, Check, Send } from "lucide-react";
 import { useState, useEffect } from "react";
 import scriptsData from "@/assets/outdoor-vibe.json";
@@ -22,15 +20,13 @@ interface NoteOption {
 }
 
 interface Note {
-  titleOptions: NoteOption[];
-  contentOptions: NoteOption[];
+  noteOptions: NoteOption[];
   imageOptions: NoteOption[];
-  selectedTitle: number;
-  selectedContent: number;
+  selectedNote: number;
   selectedImages: number[];
 }
 
-type SelectionTab = "title" | "content" | "image";
+type SelectionTab = "note" | "image";
 
 interface NotesDisplayProps {
   requirement: string;
@@ -48,12 +44,12 @@ const generateNoteOptions = (
 ): Note => {
   const scripts = Object.values(scriptsData) as ScriptData[];
 
-  // 生成多个标题选项
-  const titleOptions: NoteOption[] = [];
+  // 生成多个笔记选项（标题和内容一体）
+  const noteOptions: NoteOption[] = [];
   for (let i = 0; i < 8; i++) {
     const scriptIndex = i % scripts.length;
     const script = scripts[scriptIndex];
-    titleOptions.push({
+    noteOptions.push({
       id: i + 1,
       title: script.title,
       content: script.content,
@@ -62,12 +58,12 @@ const generateNoteOptions = (
     });
   }
 
-  // 生成多个文案选项
-  const contentOptions: NoteOption[] = [];
-  for (let i = 0; i < 8; i++) {
+  // 生成多个图片选项
+  const imageOptions: NoteOption[] = [];
+  for (let i = 0; i < 12; i++) {
     const scriptIndex = (i + 8) % scripts.length;
     const script = scripts[scriptIndex];
-    contentOptions.push({
+    imageOptions.push({
       id: i + 1,
       title: script.title,
       content: script.content,
@@ -76,26 +72,10 @@ const generateNoteOptions = (
     });
   }
 
-  // 生成多个图片选项
-  const imageOptions: NoteOption[] = [];
-  for (let i = 0; i < 12; i++) {
-    const scriptIndex = (i + 16) % scripts.length;
-    const script = scripts[scriptIndex];
-    imageOptions.push({
-      id: i + 1,
-      title: script.title,
-      content: script.content,
-      imageSrc: `/${((i + 16) % 20) + 1}.png`,
-      tags: script.tags,
-    });
-  }
-
   return {
-    titleOptions,
-    contentOptions,
+    noteOptions,
     imageOptions,
-    selectedTitle: 1,
-    selectedContent: 1,
+    selectedNote: 1,
     selectedImages: [1],
   };
 };
@@ -108,7 +88,7 @@ export default function NotesDisplay({
   onBack,
 }: NotesDisplayProps) {
   const [note, setNote] = useState<Note | null>(null);
-  const [activeTab, setActiveTab] = useState<SelectionTab>("title");
+  const [activeTab, setActiveTab] = useState<SelectionTab>("note");
   const [editedTitle, setEditedTitle] = useState("");
   const [editedContent, setEditedContent] = useState("");
   const [editedTags, setEditedTags] = useState<string[]>([]);
@@ -123,32 +103,21 @@ export default function NotesDisplay({
   // 当选中项改变时，更新编辑状态的值
   useEffect(() => {
     if (note) {
-      const selectedTitleOption = note.titleOptions.find(
-        (opt) => opt.id === note.selectedTitle
-      );
-      const selectedContentOption = note.contentOptions.find(
-        (opt) => opt.id === note.selectedContent
+      const selectedNoteOption = note.noteOptions.find(
+        (opt) => opt.id === note.selectedNote
       );
 
-      if (selectedTitleOption) {
-        setEditedTitle(selectedTitleOption.title);
-        setEditedTags([...selectedTitleOption.tags]);
-      }
-      if (selectedContentOption) {
-        setEditedContent(selectedContentOption.content);
+      if (selectedNoteOption) {
+        setEditedTitle(selectedNoteOption.title);
+        setEditedContent(selectedNoteOption.content);
+        setEditedTags([...selectedNoteOption.tags]);
       }
     }
-  }, [note?.selectedTitle, note?.selectedContent]);
+  }, [note?.selectedNote]);
 
-  const handleSelectTitle = (titleId: number) => {
+  const handleSelectNote = (noteId: number) => {
     if (note) {
-      setNote({ ...note, selectedTitle: titleId });
-    }
-  };
-
-  const handleSelectContent = (contentId: number) => {
-    if (note) {
-      setNote({ ...note, selectedContent: contentId });
+      setNote({ ...note, selectedNote: noteId });
     }
   };
 
@@ -161,19 +130,19 @@ export default function NotesDisplay({
     }
   };
 
-  const handleRegenerateOptions = (type: "title" | "content" | "image") => {
+  const handleRegenerateOptions = (type: "note" | "image") => {
     if (!note) return;
 
     const scripts = Object.values(scriptsData) as ScriptData[];
 
-    if (type === "title") {
-      // 生成更多标题选项，添加到现有选项后面
-      const newTitleOptions: NoteOption[] = [];
-      const startId = note.titleOptions.length + 1;
+    if (type === "note") {
+      // 生成更多笔记选项，添加到现有选项后面
+      const newNoteOptions: NoteOption[] = [];
+      const startId = note.noteOptions.length + 1;
       for (let i = 0; i < 8; i++) {
         const randomScript =
           scripts[Math.floor(Math.random() * scripts.length)];
-        newTitleOptions.push({
+        newNoteOptions.push({
           id: startId + i,
           title: randomScript.title,
           content: randomScript.content,
@@ -183,26 +152,7 @@ export default function NotesDisplay({
       }
       setNote({
         ...note,
-        titleOptions: [...note.titleOptions, ...newTitleOptions],
-      });
-    } else if (type === "content") {
-      // 生成更多文案选项，添加到现有选项后面
-      const newContentOptions: NoteOption[] = [];
-      const startId = note.contentOptions.length + 1;
-      for (let i = 0; i < 8; i++) {
-        const randomScript =
-          scripts[Math.floor(Math.random() * scripts.length)];
-        newContentOptions.push({
-          id: startId + i,
-          title: randomScript.title,
-          content: randomScript.content,
-          imageSrc: `/${Math.floor(Math.random() * 20) + 1}.png`,
-          tags: randomScript.tags,
-        });
-      }
-      setNote({
-        ...note,
-        contentOptions: [...note.contentOptions, ...newContentOptions],
+        noteOptions: [...note.noteOptions, ...newNoteOptions],
       });
     } else if (type === "image") {
       // 生成更多图片选项，添加到现有选项后面
@@ -247,16 +197,15 @@ export default function NotesDisplay({
     const publishData = {
       title:
         editedTitle ||
-        note.titleOptions.find((opt) => opt.id === note.selectedTitle)?.title,
+        note.noteOptions.find((opt) => opt.id === note.selectedNote)?.title,
       content:
         editedContent ||
-        note.contentOptions.find((opt) => opt.id === note.selectedContent)
-          ?.content,
+        note.noteOptions.find((opt) => opt.id === note.selectedNote)?.content,
       images: selectedImageOptions.map((opt) => opt.imageSrc),
       tags:
         editedTags.length > 0
           ? editedTags
-          : note.titleOptions.find((opt) => opt.id === note.selectedTitle)
+          : note.noteOptions.find((opt) => opt.id === note.selectedNote)
               ?.tags || [],
       timestamp: new Date().toISOString(),
     };
@@ -287,11 +236,8 @@ export default function NotesDisplay({
     return <div>加载中...</div>;
   }
 
-  const selectedTitleOption = note.titleOptions.find(
-    (opt) => opt.id === note.selectedTitle
-  );
-  const selectedContentOption = note.contentOptions.find(
-    (opt) => opt.id === note.selectedContent
+  const selectedNoteOption = note.noteOptions.find(
+    (opt) => opt.id === note.selectedNote
   );
   const selectedImageOptions = note.imageOptions.filter((opt) =>
     note.selectedImages.includes(opt.id)
@@ -308,24 +254,14 @@ export default function NotesDisplay({
               {/* 简约导航 */}
               <div className="flex border-b">
                 <button
-                  onClick={() => setActiveTab("title")}
+                  onClick={() => setActiveTab("note")}
                   className={`flex-1 py-2 px-3 text-sm transition-colors ${
-                    activeTab === "title"
+                    activeTab === "note"
                       ? "text-primary border-b-2 border-primary"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  标题
-                </button>
-                <button
-                  onClick={() => setActiveTab("content")}
-                  className={`flex-1 py-2 px-3 text-sm transition-colors ${
-                    activeTab === "content"
-                      ? "text-primary border-b-2 border-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  内容
+                  笔记
                 </button>
                 <button
                   onClick={() => setActiveTab("image")}
@@ -353,44 +289,27 @@ export default function NotesDisplay({
 
                 {/* 选项列表 */}
                 <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                  {activeTab === "title" &&
-                    note.titleOptions.map((option) => (
+                  {activeTab === "note" &&
+                    note.noteOptions.map((option) => (
                       <div
                         key={option.id}
                         className={`p-2 rounded-md cursor-pointer transition-colors ${
-                          note.selectedTitle === option.id
+                          note.selectedNote === option.id
                             ? "bg-primary/10 border border-primary/20"
                             : "hover:bg-muted/50"
                         }`}
-                        onClick={() => handleSelectTitle(option.id)}
+                        onClick={() => handleSelectNote(option.id)}
                       >
                         <div className="flex items-start justify-between">
-                          <p className="text-sm line-clamp-2 flex-1">
-                            {option.title}
-                          </p>
-                          {note.selectedTitle === option.id && (
-                            <Check className="h-3 w-3 text-primary flex-shrink-0 ml-2" />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-
-                  {activeTab === "content" &&
-                    note.contentOptions.map((option) => (
-                      <div
-                        key={option.id}
-                        className={`p-2 rounded-md cursor-pointer transition-colors ${
-                          note.selectedContent === option.id
-                            ? "bg-primary/10 border border-primary/20"
-                            : "hover:bg-muted/50"
-                        }`}
-                        onClick={() => handleSelectContent(option.id)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <p className="text-sm line-clamp-3 flex-1">
-                            {option.content}
-                          </p>
-                          {note.selectedContent === option.id && (
+                          <div className="flex-1">
+                            <p className="text-sm font-medium line-clamp-1 mb-1">
+                              {option.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {option.content}
+                            </p>
+                          </div>
+                          {note.selectedNote === option.id && (
                             <Check className="h-3 w-3 text-primary flex-shrink-0 ml-2" />
                           )}
                         </div>
