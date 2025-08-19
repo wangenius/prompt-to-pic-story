@@ -5,6 +5,7 @@ import scriptsData from "@/assets/outdoor-vibe.json";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import LoadingAnimation from "./LoadingAnimation";
 
 interface Strategy {
   style: string;
@@ -127,12 +128,34 @@ export default function NotesDisplay({
   const [editedContent, setEditedContent] = useState("");
   const [editedTags, setEditedTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+  
+  // 新增加载状态管理
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingType, setLoadingType] = useState<"note" | "image">("note");
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [regeneratingType, setRegeneratingType] = useState<"note" | "image">("note");
 
   useEffect(() => {
+    // 初始加载时显示笔记生成动画
+    setLoadingType("note");
+    setIsLoading(true);
+    
+    // 移除独立的计时器，让 LoadingAnimation 控制加载流程
+    // 数据立即生成，但显示由 LoadingAnimation 控制
     setNote(
       generateNoteOptions(requirement, noteCount, images, selectedSection)
     );
   }, [requirement, noteCount, images, selectedSection]);
+
+  // 处理初始加载完成
+  const handleInitialLoadComplete = () => {
+    setIsLoading(false);
+  };
+
+  // 处理重新生成完成
+  const handleRegenerateComplete = () => {
+    setIsRegenerating(false);
+  };
 
   // 当选中项改变时，更新编辑状态的值
   useEffect(() => {
@@ -167,6 +190,11 @@ export default function NotesDisplay({
   const handleRegenerateOptions = (type: "note" | "image") => {
     if (!note) return;
 
+    setIsRegenerating(true);
+    setRegeneratingType(type);
+
+    // 移除计时器，让 LoadingAnimation 控制流程
+    // 数据立即生成，但显示由 LoadingAnimation 控制
     const scripts = Object.values(scriptsData) as ScriptData[];
 
     if (type === "note") {
@@ -210,6 +238,8 @@ export default function NotesDisplay({
         imageOptions: [...note.imageOptions, ...newImageOptions],
       });
     }
+    
+    // 移除 setIsRegenerating(false)，由 LoadingAnimation 的 onComplete 控制
   };
 
   const handleDownload = () => {
@@ -268,8 +298,46 @@ export default function NotesDisplay({
     setEditedTags(editedTags.filter((tag) => tag !== tagToRemove));
   };
 
-  if (!note) {
-    return <div>加载中...</div>;
+  if (!note || isLoading) {
+    return (
+      <div className="bg-background min-h-screen">
+        <div className="flex gap-4 max-w-7xl mx-auto px-4 py-6 h-screen">
+          {/* 左侧加载动画区域 */}
+          <div className="flex-none w-80 bg-card rounded-lg border flex flex-col h-full">
+            <LoadingAnimation 
+              type={loadingType} 
+              onComplete={handleInitialLoadComplete} 
+              isInline={true} 
+            />
+          </div>
+          
+          {/* 右侧预览区域 - 显示加载状态 */}
+          <div className="flex-1 flex flex-col gap-4 h-full max-w-2xl">
+            <div className="flex gap-2 justify-end flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                返回
+              </Button>
+            </div>
+            
+            <div className="bg-card rounded-lg border p-6 flex-1 flex flex-col overflow-hidden">
+              <h2 className="text-lg font-medium text-foreground mb-4 flex-shrink-0">
+                预览
+              </h2>
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <p>正在生成内容，请稍候...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const selectedNoteOption = note.noteOptions.find(
@@ -285,123 +353,135 @@ export default function NotesDisplay({
       <div className="flex gap-4 max-w-7xl mx-auto px-4 py-6 h-screen">
         {/* 左侧选择栏 */}
         <div className="flex-none w-80 bg-card rounded-lg border flex flex-col h-full">
-          {/* 简约导航 */}
-          <div className="flex border-b flex-shrink-0">
-            <button
-              onClick={() => setActiveTab("note")}
-              className={`flex-1 py-3 px-4 text-sm transition-colors ${
-                activeTab === "note"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              笔记
-            </button>
-            <button
-              onClick={() => setActiveTab("image")}
-              className={`flex-1 py-3 px-4 text-sm transition-colors ${
-                activeTab === "image"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              图片
-            </button>
-          </div>
+          {/* 如果正在重新生成，显示加载动画 */}
+          {isRegenerating ? (
+            <LoadingAnimation 
+              type={regeneratingType} 
+              onComplete={handleRegenerateComplete} 
+              isInline={true} 
+            />
+          ) : (
+            <>
+              {/* 简约导航 */}
+              <div className="flex border-b flex-shrink-0">
+                <button
+                  onClick={() => setActiveTab("note")}
+                  className={`flex-1 py-3 px-4 text-sm transition-colors ${
+                    activeTab === "note"
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  笔记
+                </button>
+                <button
+                  onClick={() => setActiveTab("image")}
+                  className={`flex-1 py-3 px-4 text-sm transition-colors ${
+                    activeTab === "image"
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  图片
+                </button>
+              </div>
 
-          {/* 选择栏内容 */}
-          <div className="flex-1 flex flex-col min-h-0">
-            {/* 生成按钮 */}
-            <div className="p-4 pb-2 flex-shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleRegenerateOptions(activeTab)}
-                className="w-full"
-              >
-                更多生成
-              </Button>
-            </div>
-
-            {/* 选项列表 */}
-            <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
-              {activeTab === "note" &&
-                note.noteOptions.map((option) => (
-                  <div
-                    key={option.id}
-                    className={`p-2 rounded-lg cursor-pointer transition-colors border ${
-                      note.selectedNote === option.id
-                        ? "bg-primary/10 border-primary/30"
-                        : "hover:bg-muted/50 border-transparent"
-                    }`}
-                    onClick={() => handleSelectNote(option.id)}
+              {/* 选择栏内容 */}
+              <div className="flex-1 flex flex-col min-h-0">
+                {/* 生成按钮 */}
+                <div className="p-4 pb-2 flex-shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRegenerateOptions(activeTab)}
+                    className="w-full"
+                    disabled={isRegenerating}
                   >
-                    <div className="flex items-start justify-between mb-1">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium line-clamp-1 mb-1">
-                          {option.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {option.content}
-                        </p>
-                      </div>
-                      {note.selectedNote === option.id && (
-                        <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />
-                      )}
-                    </div>
-                    
-                    {/* 策略标签 */}
-                    <div className="flex flex-wrap gap-1">
-                      <Badge 
-                        variant="secondary" 
-                        className={`text-xs px-1.5 py-0.5 ${getStrategyColor('style', option.strategy.style)}`}
-                      >
-                        {option.strategy.style}
-                      </Badge>
-                      <Badge 
-                        variant="secondary" 
-                        className={`text-xs px-1.5 py-0.5 ${getStrategyColor('view', option.strategy.view)}`}
-                      >
-                        {option.strategy.view}
-                      </Badge>
-                      <Badge 
-                        variant="secondary" 
-                        className={`text-xs px-1.5 py-0.5 ${getStrategyColor('target', option.strategy.target)}`}
-                      >
-                        {option.strategy.target}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-
-              {activeTab === "image" && (
-                <div className="grid grid-cols-2 gap-2">
-                  {note.imageOptions.map((option) => (
-                    <div
-                      key={option.id}
-                      className={`relative aspect-square cursor-pointer transition-all rounded-lg overflow-hidden ${
-                        note.selectedImages.includes(option.id)
-                          ? "ring-2 ring-primary"
-                          : "hover:opacity-80"
-                      }`}
-                      onClick={() => handleSelectImage(option.id)}
-                    >
-                      <img
-                        src={option.imageSrc}
-                        alt={`图片选项 ${option.id}`}
-                        className="w-full h-full object-cover"
-                      />
-                      {note.selectedImages.includes(option.id) && (
-                        <div className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5">
-                          <Check className="h-2 w-2" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    更多生成
+                  </Button>
                 </div>
-              )}
-            </div>
-          </div>
+
+                {/* 选项列表 */}
+                <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
+                  {activeTab === "note" &&
+                    note.noteOptions.map((option) => (
+                      <div
+                        key={option.id}
+                        className={`p-2 rounded-lg cursor-pointer transition-colors border ${
+                          note.selectedNote === option.id
+                            ? "bg-primary/10 border-primary/30"
+                            : "hover:bg-muted/50 border-transparent"
+                        }`}
+                        onClick={() => handleSelectNote(option.id)}
+                      >
+                        <div className="flex items-start justify-between mb-1">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium line-clamp-1 mb-1">
+                              {option.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {option.content}
+                            </p>
+                          </div>
+                          {note.selectedNote === option.id && (
+                            <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />
+                          )}
+                        </div>
+                        
+                        {/* 策略标签 */}
+                        <div className="flex flex-wrap gap-1">
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-xs px-1.5 py-0.5 ${getStrategyColor('style', option.strategy.style)}`}
+                          >
+                            {option.strategy.style}
+                          </Badge>
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-xs px-1.5 py-0.5 ${getStrategyColor('view', option.strategy.view)}`}
+                          >
+                            {option.strategy.view}
+                          </Badge>
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-xs px-1.5 py-0.5 ${getStrategyColor('target', option.strategy.target)}`}
+                          >
+                            {option.strategy.target}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+
+                  {activeTab === "image" && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {note.imageOptions.map((option) => (
+                        <div
+                          key={option.id}
+                          className={`relative aspect-square cursor-pointer transition-all rounded-lg overflow-hidden ${
+                            note.selectedImages.includes(option.id)
+                              ? "ring-2 ring-primary"
+                              : "hover:opacity-80"
+                          }`}
+                          onClick={() => handleSelectImage(option.id)}
+                        >
+                          <img
+                            src={option.imageSrc}
+                            alt={`图片选项 ${option.id}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {note.selectedImages.includes(option.id) && (
+                            <div className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5">
+                              <Check className="h-2 w-2" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* 右侧预览区域 */}

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import LoadingAnimation from "./LoadingAnimation";
 import {
   Upload,
   FileText,
@@ -80,6 +81,7 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
   const [requirement, setRequirement] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const selectedSectionConfig = selectedSection
     ? sections.find((s) => s.id === selectedSection)
@@ -109,9 +111,15 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
 
   const handleSubmit = () => {
     if (selectedSection && requirement.trim()) {
-      onSubmit({ requirement, images, selectedSection });
+      setIsLoading(true);
+      // 延迟提交以显示加载状态
+      setTimeout(() => {
+        onSubmit({ requirement, images, selectedSection });
+      }, 500);
     }
   };
+
+  // 移除全屏加载动画
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
@@ -296,11 +304,11 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
           <div className="flex justify-center">
             <Button
               onClick={handleSubmit}
-              disabled={!requirement.trim()}
+              disabled={!requirement.trim() || isLoading}
               className="px-8 py-3 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Sparkles className="h-4 w-4 mr-2" />
-              生成内容
+              {isLoading ? "处理中..." : "生成内容"}
             </Button>
           </div>
         </div>
