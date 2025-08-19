@@ -116,7 +116,7 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
   };
 
   const handleSelectionChange = (
-    category: 'styleFlexibility' | 'userPersona' | 'communicationGoal',
+    category: "styleFlexibility" | "userPersona" | "communicationGoal",
     value: string
   ) => {
     const setterMap = {
@@ -124,35 +124,35 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
       userPersona: setUserPersona,
       communicationGoal: setCommunicationGoal,
     };
-    
+
     const currentValues = {
       styleFlexibility,
       userPersona,
       communicationGoal,
     };
-    
+
     const setter = setterMap[category];
     const currentValue = currentValues[category];
-    
-    setter(prev => 
-      prev.includes(value) 
-        ? prev.filter(item => item !== value)
+
+    setter((prev) =>
+      prev.includes(value)
+        ? prev.filter((item) => item !== value)
         : [...prev, value]
     );
   };
 
   const handleSubmit = () => {
-    if (selectedSection && requirement.trim()) {
+    if (selectedSection) {
       setIsLoading(true);
       // 延迟提交以显示加载状态
       setTimeout(() => {
-        onSubmit({ 
-          requirement, 
-          images, 
-          selectedSection, 
-          styleFlexibility, 
-          userPersona, 
-          communicationGoal 
+        onSubmit({
+          requirement,
+          images,
+          selectedSection,
+          styleFlexibility,
+          userPersona,
+          communicationGoal,
         });
       }, 500);
     }
@@ -271,16 +271,23 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
                   风格灵活度:
                 </Label>
                 <div className="flex flex-wrap gap-2">
-                  {['保守型', '适中型', '创新型'].map((option) => (
+                  {["保守型", "适中型", "创新型"].map((option) => (
                     <Button
                       key={option}
-                      variant={styleFlexibility.includes(option) ? "default" : "outline"}
+                      variant={
+                        styleFlexibility.includes(option)
+                          ? "default"
+                          : "outline"
+                      }
                       size="sm"
-                      onClick={() => handleSelectionChange('styleFlexibility', option)}
+                      onClick={() =>
+                        handleSelectionChange("styleFlexibility", option)
+                      }
                       className={`
-                        ${styleFlexibility.includes(option) 
-                          ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        ${
+                          styleFlexibility.includes(option)
+                            ? "bg-purple-600 hover:bg-purple-700 text-white"
+                            : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                         }
                       `}
                     >
@@ -296,16 +303,21 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
                   用户人设视角:
                 </Label>
                 <div className="flex flex-wrap gap-2">
-                  {['精致白领', '户外玩家', '社交达人'].map((option) => (
+                  {["精致白领", "户外玩家", "社交达人"].map((option) => (
                     <Button
                       key={option}
-                      variant={userPersona.includes(option) ? "default" : "outline"}
+                      variant={
+                        userPersona.includes(option) ? "default" : "outline"
+                      }
                       size="sm"
-                      onClick={() => handleSelectionChange('userPersona', option)}
+                      onClick={() =>
+                        handleSelectionChange("userPersona", option)
+                      }
                       className={`
-                        ${userPersona.includes(option) 
-                          ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        ${
+                          userPersona.includes(option)
+                            ? "bg-purple-600 hover:bg-purple-700 text-white"
+                            : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                         }
                       `}
                     >
@@ -321,16 +333,23 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
                   种草沟通目标:
                 </Label>
                 <div className="flex flex-wrap gap-2">
-                  {['激发好奇', '深度种草', '号召行动'].map((option) => (
+                  {["激发好奇", "深度种草", "号召行动"].map((option) => (
                     <Button
                       key={option}
-                      variant={communicationGoal.includes(option) ? "default" : "outline"}
+                      variant={
+                        communicationGoal.includes(option)
+                          ? "default"
+                          : "outline"
+                      }
                       size="sm"
-                      onClick={() => handleSelectionChange('communicationGoal', option)}
+                      onClick={() =>
+                        handleSelectionChange("communicationGoal", option)
+                      }
                       className={`
-                        ${communicationGoal.includes(option) 
-                          ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        ${
+                          communicationGoal.includes(option)
+                            ? "bg-purple-600 hover:bg-purple-700 text-white"
+                            : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                         }
                       `}
                     >
@@ -423,7 +442,7 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
           <div className="flex justify-center">
             <Button
               onClick={handleSubmit}
-              disabled={!requirement.trim() || isLoading}
+              disabled={isLoading}
               className="px-8 py-3 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Sparkles className="h-4 w-4 mr-2" />

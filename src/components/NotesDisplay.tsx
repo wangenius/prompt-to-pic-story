@@ -60,34 +60,68 @@ const generateNoteOptions = (
 ): Note => {
   const scripts = Object.values(scriptsData) as ScriptData[];
 
+  // 根据用户选择的策略筛选文案
+  const filteredScripts = scripts.filter(script => {
+    const strategy = script.strategy;
+    
+    // 如果用户没有选择任何策略，则显示所有文案
+    if (styleFlexibility.length === 0 && userPersona.length === 0 && communicationGoal.length === 0) {
+      return true;
+    }
+    
+    // 检查是否完全匹配用户选择的策略
+    // 如果用户选择了某个策略类别，那么文案必须在该类别中有匹配项
+    const styleMatch = styleFlexibility.length === 0 || styleFlexibility.includes(strategy.style);
+    const viewMatch = userPersona.length === 0 || userPersona.includes(strategy.view);
+    const targetMatch = communicationGoal.length === 0 || communicationGoal.includes(strategy.target);
+    
+    // 必须同时匹配所有已选择的策略类别
+    return styleMatch && viewMatch && targetMatch;
+  });
+
+  // 使用筛选后的文案，如果没有匹配的文案，则使用空数组
+  const availableScripts = filteredScripts;
+  
+  // 调试信息
+  console.log('筛选结果:', {
+    用户选择: { styleFlexibility, userPersona, communicationGoal },
+    筛选前数量: scripts.length,
+    筛选后数量: filteredScripts.length,
+    筛选后文案: filteredScripts.map(s => ({ title: s.title, strategy: s.strategy }))
+  });
+
   // 生成多个笔记选项（标题和内容一体）
   const noteOptions: NoteOption[] = [];
-  for (let i = 0; i < 8; i++) {
-    const scriptIndex = i % scripts.length;
-    const script = scripts[scriptIndex];
-    noteOptions.push({
-      id: i + 1,
-      title: script.title,
-      content: script.content,
-      imageSrc: `/${(i % 20) + 1}.png`,
-      tags: script.tags,
-      strategy: script.strategy,
-    });
+  if (availableScripts.length > 0) {
+    for (let i = 0; i < 8; i++) {
+      const scriptIndex = i % availableScripts.length;
+      const script = availableScripts[scriptIndex];
+      noteOptions.push({
+        id: i + 1,
+        title: script.title,
+        content: script.content,
+        imageSrc: `/${(i % 20) + 1}.png`,
+        tags: script.tags,
+        strategy: script.strategy,
+      });
+    }
   }
 
   // 生成多个图片选项
   const imageOptions: NoteOption[] = [];
-  for (let i = 0; i < 12; i++) {
-    const scriptIndex = (i + 8) % scripts.length;
-    const script = scripts[scriptIndex];
-    imageOptions.push({
-      id: i + 1,
-      title: script.title,
-      content: script.content,
-      imageSrc: `/${((i + 8) % 20) + 1}.png`,
-      tags: script.tags,
-      strategy: script.strategy,
-    });
+  if (availableScripts.length > 0) {
+    for (let i = 0; i < 12; i++) {
+      const scriptIndex = (i + 8) % availableScripts.length;
+      const script = availableScripts[scriptIndex];
+      imageOptions.push({
+        id: i + 1,
+        title: script.title,
+        content: script.content,
+        imageSrc: `/${((i + 8) % 20) + 1}.png`,
+        tags: script.tags,
+        strategy: script.strategy,
+      });
+    }
   }
 
   return {
@@ -109,7 +143,8 @@ const getStrategyColor = (type: string, value: string) => {
     view: {
       "精致白领": "bg-purple-100 text-purple-800",
       "社交达人": "bg-pink-100 text-pink-800",
-      "户外玩家": "bg-orange-100 text-orange-800"
+      "户外玩家": "bg-orange-100 text-orange-800",
+      "官方视角": "bg-cyan-100 text-cyan-800"
     },
     target: {
       "深度种草": "bg-red-100 text-red-800",
@@ -202,17 +237,36 @@ export default function NotesDisplay({
     setIsRegenerating(true);
     setRegeneratingType(type);
 
-    // 移除计时器，让 LoadingAnimation 控制流程
-    // 数据立即生成，但显示由 LoadingAnimation 控制
+    // 根据用户选择的策略筛选文案
     const scripts = Object.values(scriptsData) as ScriptData[];
+    const filteredScripts = scripts.filter(script => {
+      const strategy = script.strategy;
+      
+      // 如果用户没有选择任何策略，则显示所有文案
+      if (styleFlexibility.length === 0 && userPersona.length === 0 && communicationGoal.length === 0) {
+        return true;
+      }
+      
+      // 检查是否完全匹配用户选择的策略
+      // 如果用户选择了某个策略类别，那么文案必须在该类别中有匹配项
+      const styleMatch = styleFlexibility.length === 0 || styleFlexibility.includes(strategy.style);
+      const viewMatch = userPersona.length === 0 || userPersona.includes(strategy.view);
+      const targetMatch = communicationGoal.length === 0 || communicationGoal.includes(strategy.target);
+      
+      // 必须同时匹配所有已选择的策略类别
+      return styleMatch && viewMatch && targetMatch;
+    });
 
-    if (type === "note") {
+    // 使用筛选后的文案，如果没有匹配的文案，则使用空数组
+    const availableScripts = filteredScripts;
+
+    if (type === "note" && availableScripts.length > 0) {
       // 生成更多笔记选项，添加到现有选项后面
       const newNoteOptions: NoteOption[] = [];
       const startId = note.noteOptions.length + 1;
       for (let i = 0; i < 8; i++) {
         const randomScript =
-          scripts[Math.floor(Math.random() * scripts.length)];
+          availableScripts[Math.floor(Math.random() * availableScripts.length)];
         newNoteOptions.push({
           id: startId + i,
           title: randomScript.title,
@@ -226,13 +280,13 @@ export default function NotesDisplay({
         ...note,
         noteOptions: [...note.noteOptions, ...newNoteOptions],
       });
-    } else if (type === "image") {
+    } else if (type === "image" && availableScripts.length > 0) {
       // 生成更多图片选项，添加到现有选项后面
       const newImageOptions: NoteOption[] = [];
       const startId = note.imageOptions.length + 1;
       for (let i = 0; i < 12; i++) {
         const randomScript =
-          scripts[Math.floor(Math.random() * scripts.length)];
+          availableScripts[Math.floor(Math.random() * availableScripts.length)];
         newImageOptions.push({
           id: startId + i,
           title: randomScript.title,
@@ -371,6 +425,30 @@ export default function NotesDisplay({
             />
           ) : (
             <>
+              {/* 策略显示区域 */}
+              {(styleFlexibility.length > 0 || userPersona.length > 0 || communicationGoal.length > 0) && (
+                <div className="p-4 pb-2 border-b">
+                  <div className="text-xs text-muted-foreground mb-2">当前策略筛选:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {styleFlexibility.map((style) => (
+                      <Badge key={style} variant="outline" className="text-xs px-1.5 py-0.5">
+                        {style}
+                      </Badge>
+                    ))}
+                    {userPersona.map((persona) => (
+                      <Badge key={persona} variant="outline" className="text-xs px-1.5 py-0.5">
+                        {persona}
+                      </Badge>
+                    ))}
+                    {communicationGoal.map((goal) => (
+                      <Badge key={goal} variant="outline" className="text-xs px-1.5 py-0.5">
+                        {goal}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* 简约导航 */}
               <div className="flex border-b flex-shrink-0">
                 <button
