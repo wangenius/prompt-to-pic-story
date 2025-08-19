@@ -100,7 +100,7 @@ const generateNoteOptions = (
         id: i + 1,
         title: script.title,
         content: script.content,
-        imageSrc: `/sam/${(i % 16) + 1}.png`,
+        imageSrc: `/sam/${(i % 25) + 1}.png`,
         tags: script.tags,
         strategy: script.strategy,
       });
@@ -117,7 +117,7 @@ const generateNoteOptions = (
         id: i + 1,
         title: script.title,
         content: script.content,
-        imageSrc: `/sam/${(i % 16) + 1}.png`,
+        imageSrc: `/sam/${(i % 25) + 1}.png`,
         tags: script.tags,
         strategy: script.strategy,
       });
@@ -295,7 +295,7 @@ export default function NotesDisplay({
             id: startId + i,
             title: script.title,
             content: script.content,
-            imageSrc: `/sam/${((currentCount + i) % 16) + 1}.png`,
+            imageSrc: `/sam/${((currentCount + i) % 25) + 1}.png`,
             tags: script.tags,
             strategy: script.strategy,
           });
@@ -334,7 +334,7 @@ export default function NotesDisplay({
             id: startId + i,
             title: script.title,
             content: script.content,
-            imageSrc: `/sam/${(i % 16) + 1}.png`,
+            imageSrc: `/sam/${(i % 25) + 1}.png`,
             tags: script.tags,
             strategy: script.strategy,
           });
