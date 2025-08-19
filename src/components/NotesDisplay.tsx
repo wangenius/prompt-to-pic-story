@@ -90,34 +90,34 @@ const generateNoteOptions = (
     筛选后文案: filteredScripts.map(s => ({ title: s.title, strategy: s.strategy }))
   });
 
-  // 生成多个笔记选项（标题和内容一体）
+  // 生成多个笔记选项（标题和内容一体）- 第一次展示10条
   const noteOptions: NoteOption[] = [];
   if (availableScripts.length > 0) {
-    for (let i = 0; i < 8; i++) {
-      const scriptIndex = i % availableScripts.length;
-      const script = availableScripts[scriptIndex];
+    const initialCount = Math.min(10, availableScripts.length);
+    for (let i = 0; i < initialCount; i++) {
+      const script = availableScripts[i];
       noteOptions.push({
         id: i + 1,
         title: script.title,
         content: script.content,
-        imageSrc: `/${(i % 20) + 1}.png`,
+        imageSrc: `/sam/${(i % 16) + 1}.png`,
         tags: script.tags,
         strategy: script.strategy,
       });
     }
   }
 
-  // 生成多个图片选项
+  // 生成多个图片选项 - 第一次展示10条
   const imageOptions: NoteOption[] = [];
   if (availableScripts.length > 0) {
-    for (let i = 0; i < 12; i++) {
-      const scriptIndex = (i + 8) % availableScripts.length;
-      const script = availableScripts[scriptIndex];
+    const initialCount = Math.min(10, availableScripts.length);
+    for (let i = 0; i < initialCount; i++) {
+      const script = availableScripts[i];
       imageOptions.push({
         id: i + 1,
         title: script.title,
         content: script.content,
-        imageSrc: `/${((i + 8) % 20) + 1}.png`,
+        imageSrc: `/sam/${(i % 16) + 1}.png`,
         tags: script.tags,
         strategy: script.strategy,
       });
@@ -178,6 +178,7 @@ export default function NotesDisplay({
   const [loadingType, setLoadingType] = useState<"note" | "image">("note");
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regeneratingType, setRegeneratingType] = useState<"note" | "image">("note");
+  const [hasMoreContent, setHasMoreContent] = useState({ note: true, image: true });
 
   useEffect(() => {
     // 初始加载时显示笔记生成动画
@@ -186,9 +187,26 @@ export default function NotesDisplay({
     
     // 移除独立的计时器，让 LoadingAnimation 控制加载流程
     // 数据立即生成，但显示由 LoadingAnimation 控制
-    setNote(
-      generateNoteOptions(requirement, noteCount, images, selectedSection, styleFlexibility, userPersona, communicationGoal)
-    );
+    const newNote = generateNoteOptions(requirement, noteCount, images, selectedSection, styleFlexibility, userPersona, communicationGoal);
+    setNote(newNote);
+    
+    // 根据筛选后的文案数量设置是否有更多内容
+    const scripts = Object.values(scriptsData) as ScriptData[];
+    const filteredScripts = scripts.filter(script => {
+      const strategy = script.strategy;
+      if (styleFlexibility.length === 0 && userPersona.length === 0 && communicationGoal.length === 0) {
+        return true;
+      }
+      const styleMatch = styleFlexibility.length === 0 || styleFlexibility.includes(strategy.style);
+      const viewMatch = userPersona.length === 0 || userPersona.includes(strategy.view);
+      const targetMatch = communicationGoal.length === 0 || communicationGoal.includes(strategy.target);
+      return styleMatch && viewMatch && targetMatch;
+    });
+    
+    setHasMoreContent({
+      note: newNote.noteOptions.length < filteredScripts.length,
+      image: newNote.imageOptions.length < filteredScripts.length
+    });
   }, [requirement, noteCount, images, selectedSection, styleFlexibility, userPersona, communicationGoal]);
 
   // 处理初始加载完成
@@ -260,46 +278,84 @@ export default function NotesDisplay({
     // 使用筛选后的文案，如果没有匹配的文案，则使用空数组
     const availableScripts = filteredScripts;
 
-    if (type === "note" && availableScripts.length > 0) {
-      // 生成更多笔记选项，添加到现有选项后面
-      const newNoteOptions: NoteOption[] = [];
-      const startId = note.noteOptions.length + 1;
-      for (let i = 0; i < 8; i++) {
-        const randomScript =
-          availableScripts[Math.floor(Math.random() * availableScripts.length)];
-        newNoteOptions.push({
-          id: startId + i,
-          title: randomScript.title,
-          content: randomScript.content,
-          imageSrc: `/${Math.floor(Math.random() * 20) + 1}.png`,
-          tags: randomScript.tags,
-          strategy: randomScript.strategy,
+    if (type === "note") {
+      // 检查是否还有更多可用的文案
+      const currentCount = note.noteOptions.length;
+      const remainingScripts = availableScripts.slice(currentCount);
+      
+      if (remainingScripts.length > 0) {
+        // 生成更多笔记选项，添加到现有选项后面（不重复）
+        const newNoteOptions: NoteOption[] = [];
+        const startId = note.noteOptions.length + 1;
+        const addCount = Math.min(10, remainingScripts.length); // 每次最多添加10条
+        
+        for (let i = 0; i < addCount; i++) {
+          const script = remainingScripts[i];
+          newNoteOptions.push({
+            id: startId + i,
+            title: script.title,
+            content: script.content,
+            imageSrc: `/sam/${((currentCount + i) % 16) + 1}.png`,
+            tags: script.tags,
+            strategy: script.strategy,
+          });
+        }
+        setNote({
+          ...note,
+          noteOptions: [...note.noteOptions, ...newNoteOptions],
         });
+        
+        // 检查是否还有更多内容
+        const remainingAfterAdd = remainingScripts.length - addCount;
+        if (remainingAfterAdd <= 0) {
+          setHasMoreContent(prev => ({ ...prev, note: false }));
+        }
+      } else {
+        // 没有更多内容了，显示提示
+        alert("没有更多笔记内容了！");
+        setHasMoreContent(prev => ({ ...prev, note: false }));
+        setIsRegenerating(false);
+        return;
       }
-      setNote({
-        ...note,
-        noteOptions: [...note.noteOptions, ...newNoteOptions],
-      });
-    } else if (type === "image" && availableScripts.length > 0) {
-      // 生成更多图片选项，添加到现有选项后面
-      const newImageOptions: NoteOption[] = [];
-      const startId = note.imageOptions.length + 1;
-      for (let i = 0; i < 12; i++) {
-        const randomScript =
-          availableScripts[Math.floor(Math.random() * availableScripts.length)];
-        newImageOptions.push({
-          id: startId + i,
-          title: randomScript.title,
-          content: randomScript.content,
-          imageSrc: `/${Math.floor(Math.random() * 20) + 1}.png`,
-          tags: randomScript.tags,
-          strategy: randomScript.strategy,
+    } else if (type === "image") {
+      // 检查是否还有更多可用的文案
+      const currentCount = note.imageOptions.length;
+      const remainingScripts = availableScripts.slice(currentCount);
+      
+      if (remainingScripts.length > 0) {
+        // 生成更多图片选项，添加到现有选项后面（不重复）
+        const newImageOptions: NoteOption[] = [];
+        const startId = note.imageOptions.length + 1;
+        const addCount = Math.min(10, remainingScripts.length); // 每次最多添加10条
+        
+        for (let i = 0; i < addCount; i++) {
+          const script = remainingScripts[i];
+          newImageOptions.push({
+            id: startId + i,
+            title: script.title,
+            content: script.content,
+            imageSrc: `/sam/${(i % 16) + 1}.png`,
+            tags: script.tags,
+            strategy: script.strategy,
+          });
+        }
+        setNote({
+          ...note,
+          imageOptions: [...note.imageOptions, ...newImageOptions],
         });
+        
+        // 检查是否还有更多内容
+        const remainingAfterAdd = remainingScripts.length - addCount;
+        if (remainingAfterAdd <= 0) {
+          setHasMoreContent(prev => ({ ...prev, image: false }));
+        }
+      } else {
+        // 没有更多内容了，显示提示
+        alert("没有更多图片内容了！");
+        setHasMoreContent(prev => ({ ...prev, image: false }));
+        setIsRegenerating(false);
+        return;
       }
-      setNote({
-        ...note,
-        imageOptions: [...note.imageOptions, ...newImageOptions],
-      });
     }
     
     // 移除 setIsRegenerating(false)，由 LoadingAnimation 的 onComplete 控制
@@ -482,9 +538,9 @@ export default function NotesDisplay({
                     size="sm"
                     onClick={() => handleRegenerateOptions(activeTab)}
                     className="w-full"
-                    disabled={isRegenerating}
+                    disabled={isRegenerating || !hasMoreContent[activeTab]}
                   >
-                    更多生成
+                    {hasMoreContent[activeTab] ? "更多生成" : "没有更多内容"}
                   </Button>
                 </div>
 
@@ -619,6 +675,14 @@ export default function NotesDisplay({
                         alt={`预览图片 ${imageOption.id}`}
                         className="w-full h-full object-cover"
                       />
+                      {/* 删除按钮 */}
+                      <button
+                        onClick={() => handleSelectImage(imageOption.id)}
+                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+                        title="取消选择"
+                      >
+                        ×
+                      </button>
                     </div>
                   ))}
                 </div>

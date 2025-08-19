@@ -103,7 +103,7 @@ export default function LoadingAnimation({ type, onComplete, isInline = false }:
     if (type === "image" && currentStep >= 2) {
       const imageTimer = setInterval(() => {
         if (currentImageIndex < 12) {
-          const newImage = `/${Math.floor(Math.random() * 20) + 1}.png`;
+          const newImage = `/sam/${(Math.floor(Math.random() * 16) + 1)}.png`;
           setGeneratedImages(prev => [...prev, newImage]);
           setCurrentImageIndex(prev => prev + 1);
         } else {
