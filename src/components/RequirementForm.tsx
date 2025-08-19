@@ -20,6 +20,9 @@ interface RequirementFormProps {
     requirement: string;
     images: File[];
     selectedSection: string;
+    styleFlexibility: string[];
+    userPersona: string[];
+    communicationGoal: string[];
   }) => void;
 }
 
@@ -82,6 +85,9 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
   const [images, setImages] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [styleFlexibility, setStyleFlexibility] = useState<string[]>([]);
+  const [userPersona, setUserPersona] = useState<string[]>([]);
+  const [communicationGoal, setCommunicationGoal] = useState<string[]>([]);
 
   const selectedSectionConfig = selectedSection
     ? sections.find((s) => s.id === selectedSection)
@@ -109,12 +115,45 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
     handleImageUpload(files);
   };
 
+  const handleSelectionChange = (
+    category: 'styleFlexibility' | 'userPersona' | 'communicationGoal',
+    value: string
+  ) => {
+    const setterMap = {
+      styleFlexibility: setStyleFlexibility,
+      userPersona: setUserPersona,
+      communicationGoal: setCommunicationGoal,
+    };
+    
+    const currentValues = {
+      styleFlexibility,
+      userPersona,
+      communicationGoal,
+    };
+    
+    const setter = setterMap[category];
+    const currentValue = currentValues[category];
+    
+    setter(prev => 
+      prev.includes(value) 
+        ? prev.filter(item => item !== value)
+        : [...prev, value]
+    );
+  };
+
   const handleSubmit = () => {
     if (selectedSection && requirement.trim()) {
       setIsLoading(true);
       // 延迟提交以显示加载状态
       setTimeout(() => {
-        onSubmit({ requirement, images, selectedSection });
+        onSubmit({ 
+          requirement, 
+          images, 
+          selectedSection, 
+          styleFlexibility, 
+          userPersona, 
+          communicationGoal 
+        });
       }, 500);
     }
   };
@@ -209,12 +248,12 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
                     htmlFor="requirement"
                     className="text-lg font-semibold"
                   >
-                    {selectedSectionConfig.title} - 文案内容
+                    {selectedSectionConfig.title} : 输入您的文案需求
                   </Label>
                 </div>
                 <Textarea
                   id="requirement"
-                  placeholder={`请详细描述您的${selectedSectionConfig.title}需求、目标用户、期望内容等...`}
+                  placeholder={`请描述您的笔记内容想传达的核心信息`}
                   value={requirement}
                   onChange={(e) => setRequirement(e.target.value)}
                   className="min-h-32 resize-none border-gray-300 focus:border-blue-500"
@@ -222,6 +261,86 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
               </div>
             </Card>
           )}
+
+          {/* 风格选择区域 */}
+          <Card className="p-6 border rounded-lg">
+            <div className="space-y-6">
+              {/* 风格灵活度 */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold text-gray-900">
+                  风格灵活度:
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {['保守型', '适中型', '创新型'].map((option) => (
+                    <Button
+                      key={option}
+                      variant={styleFlexibility.includes(option) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleSelectionChange('styleFlexibility', option)}
+                      className={`
+                        ${styleFlexibility.includes(option) 
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        }
+                      `}
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 用户人设视角 */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold text-gray-900">
+                  用户人设视角:
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {['精致白领', '户外玩家', '社交达人'].map((option) => (
+                    <Button
+                      key={option}
+                      variant={userPersona.includes(option) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleSelectionChange('userPersona', option)}
+                      className={`
+                        ${userPersona.includes(option) 
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        }
+                      `}
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 种草沟通目标 */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold text-gray-900">
+                  种草沟通目标:
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {['激发好奇', '深度种草', '号召行动'].map((option) => (
+                    <Button
+                      key={option}
+                      variant={communicationGoal.includes(option) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleSelectionChange('communicationGoal', option)}
+                      className={`
+                        ${communicationGoal.includes(option) 
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        }
+                      `}
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
 
           {/* 图片上传区域 - 仅旷野回响板块显示 */}
           {selectedSectionConfig.hasImageUpload && (

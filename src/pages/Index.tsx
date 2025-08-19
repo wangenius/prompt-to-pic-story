@@ -10,6 +10,9 @@ interface SubmittedData {
   noteCount: number;
   images: File[];
   selectedSection: string;
+  styleFlexibility: string[];
+  userPersona: string[];
+  communicationGoal: string[];
 }
 
 const Index = () => {
@@ -33,6 +36,9 @@ const Index = () => {
           noteCount={submittedData.noteCount}
           images={submittedData.images}
           selectedSection={submittedData.selectedSection}
+          styleFlexibility={submittedData.styleFlexibility}
+          userPersona={submittedData.userPersona}
+          communicationGoal={submittedData.communicationGoal}
           onBack={handleBack}
         />
       </div>

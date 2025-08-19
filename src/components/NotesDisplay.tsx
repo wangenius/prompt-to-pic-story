@@ -43,6 +43,9 @@ interface NotesDisplayProps {
   noteCount: number;
   images: File[];
   selectedSection: string;
+  styleFlexibility: string[];
+  userPersona: string[];
+  communicationGoal: string[];
   onBack: () => void;
 }
 
@@ -50,7 +53,10 @@ const generateNoteOptions = (
   requirement: string,
   noteCount: number,
   images: File[],
-  selectedSection: string
+  selectedSection: string,
+  styleFlexibility: string[],
+  userPersona: string[],
+  communicationGoal: string[]
 ): Note => {
   const scripts = Object.values(scriptsData) as ScriptData[];
 
@@ -120,6 +126,9 @@ export default function NotesDisplay({
   noteCount,
   images,
   selectedSection,
+  styleFlexibility,
+  userPersona,
+  communicationGoal,
   onBack,
 }: NotesDisplayProps) {
   const [note, setNote] = useState<Note | null>(null);
@@ -143,9 +152,9 @@ export default function NotesDisplay({
     // 移除独立的计时器，让 LoadingAnimation 控制加载流程
     // 数据立即生成，但显示由 LoadingAnimation 控制
     setNote(
-      generateNoteOptions(requirement, noteCount, images, selectedSection)
+      generateNoteOptions(requirement, noteCount, images, selectedSection, styleFlexibility, userPersona, communicationGoal)
     );
-  }, [requirement, noteCount, images, selectedSection]);
+  }, [requirement, noteCount, images, selectedSection, styleFlexibility, userPersona, communicationGoal]);
 
   // 处理初始加载完成
   const handleInitialLoadComplete = () => {
