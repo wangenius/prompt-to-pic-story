@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -78,16 +78,74 @@ const sections: SectionConfig[] = [
   },
 ];
 
+// 添加存储键名常量
+const STORAGE_KEYS = {
+  SELECTED_SECTION: "requirement-form-selected-section",
+  REQUIREMENT: "requirement-form-requirement",
+  STYLE_FLEXIBILITY: "requirement-form-style-flexibility",
+  USER_PERSONA: "requirement-form-user-persona",
+  COMMUNICATION_GOAL: "requirement-form-communication-goal",
+};
+
+// 添加存储工具函数
+const saveToStorage = (key: string, value: any) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn("Failed to save to localStorage:", error);
+  }
+};
+
+const loadFromStorage = (key: string, defaultValue: any) => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (error) {
+    console.warn("Failed to load from localStorage:", error);
+    return defaultValue;
+  }
+};
+
 export default function RequirementForm({ onSubmit }: RequirementFormProps) {
-  const [selectedSection, setSelectedSection] =
-    useState<SectionType>("outdoor-guide");
-  const [requirement, setRequirement] = useState("");
+  const [selectedSection, setSelectedSection] = useState<SectionType>(() =>
+    loadFromStorage(STORAGE_KEYS.SELECTED_SECTION, "outdoor-guide")
+  );
+  const [requirement, setRequirement] = useState(() =>
+    loadFromStorage(STORAGE_KEYS.REQUIREMENT, "")
+  );
   const [images, setImages] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [styleFlexibility, setStyleFlexibility] = useState<string[]>([]);
-  const [userPersona, setUserPersona] = useState<string[]>([]);
-  const [communicationGoal, setCommunicationGoal] = useState<string[]>([]);
+  const [styleFlexibility, setStyleFlexibility] = useState<string[]>(() =>
+    loadFromStorage(STORAGE_KEYS.STYLE_FLEXIBILITY, [])
+  );
+  const [userPersona, setUserPersona] = useState<string[]>(() =>
+    loadFromStorage(STORAGE_KEYS.USER_PERSONA, [])
+  );
+  const [communicationGoal, setCommunicationGoal] = useState<string[]>(() =>
+    loadFromStorage(STORAGE_KEYS.COMMUNICATION_GOAL, [])
+  );
+
+  // 监听状态变化并保存到 localStorage
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.SELECTED_SECTION, selectedSection);
+  }, [selectedSection]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.REQUIREMENT, requirement);
+  }, [requirement]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.STYLE_FLEXIBILITY, styleFlexibility);
+  }, [styleFlexibility]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.USER_PERSONA, userPersona);
+  }, [userPersona]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.COMMUNICATION_GOAL, communicationGoal);
+  }, [communicationGoal]);
 
   const selectedSectionConfig = selectedSection
     ? sections.find((s) => s.id === selectedSection)
@@ -156,6 +214,22 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
         });
       }, 500);
     }
+  };
+
+  // 清除所有存储的数据
+  const handleClearStorage = () => {
+    // 清除 localStorage
+    Object.values(STORAGE_KEYS).forEach((key) => {
+      localStorage.removeItem(key);
+    });
+
+    // 重置状态
+    setSelectedSection("outdoor-guide");
+    setRequirement("");
+    setImages([]);
+    setStyleFlexibility([]);
+    setUserPersona([]);
+    setCommunicationGoal([]);
   };
 
   // 移除全屏加载动画
@@ -265,6 +339,11 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
           {/* 风格选择区域 */}
           <Card className="p-6 border rounded-lg">
             <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  风格配置
+                </h3>
+              </div>
               {/* 风格灵活度 */}
               <div className="space-y-3">
                 <Label className="text-base font-semibold text-gray-900">
@@ -439,7 +518,7 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
           )}
 
           {/* 生成按钮 */}
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-4">
             <Button
               onClick={handleSubmit}
               disabled={isLoading}
@@ -447,6 +526,13 @@ export default function RequirementForm({ onSubmit }: RequirementFormProps) {
             >
               <Sparkles className="h-4 w-4 mr-2" />
               {isLoading ? "处理中..." : "生成内容"}
+            </Button>
+            <Button
+              onClick={handleClearStorage}
+              variant="outline"
+              className="px-6 py-3 text-base border-gray-300 hover:bg-gray-50 text-gray-700"
+            >
+              清空输入
             </Button>
           </div>
         </div>
