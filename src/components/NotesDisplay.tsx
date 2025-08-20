@@ -61,33 +61,45 @@ const generateNoteOptions = (
   const scripts = Object.values(scriptsData) as ScriptData[];
 
   // 根据用户选择的策略筛选文案
-  const filteredScripts = scripts.filter(script => {
+  const filteredScripts = scripts.filter((script) => {
     const strategy = script.strategy;
-    
+
     // 如果用户没有选择任何策略，则显示所有文案
-    if (styleFlexibility.length === 0 && userPersona.length === 0 && communicationGoal.length === 0) {
+    if (
+      styleFlexibility.length === 0 &&
+      userPersona.length === 0 &&
+      communicationGoal.length === 0
+    ) {
       return true;
     }
-    
+
     // 检查是否完全匹配用户选择的策略
     // 如果用户选择了某个策略类别，那么文案必须在该类别中有匹配项
-    const styleMatch = styleFlexibility.length === 0 || styleFlexibility.includes(strategy.style);
-    const viewMatch = userPersona.length === 0 || userPersona.includes(strategy.view);
-    const targetMatch = communicationGoal.length === 0 || communicationGoal.includes(strategy.target);
-    
+    const styleMatch =
+      styleFlexibility.length === 0 ||
+      styleFlexibility.includes(strategy.style);
+    const viewMatch =
+      userPersona.length === 0 || userPersona.includes(strategy.view);
+    const targetMatch =
+      communicationGoal.length === 0 ||
+      communicationGoal.includes(strategy.target);
+
     // 必须同时匹配所有已选择的策略类别
     return styleMatch && viewMatch && targetMatch;
   });
 
   // 使用筛选后的文案，如果没有匹配的文案，则使用空数组
   const availableScripts = filteredScripts;
-  
+
   // 调试信息
-  console.log('筛选结果:', {
+  console.log("筛选结果:", {
     用户选择: { styleFlexibility, userPersona, communicationGoal },
     筛选前数量: scripts.length,
     筛选后数量: filteredScripts.length,
-    筛选后文案: filteredScripts.map(s => ({ title: s.title, strategy: s.strategy }))
+    筛选后文案: filteredScripts.map((s) => ({
+      title: s.title,
+      strategy: s.strategy,
+    })),
   });
 
   // 生成多个笔记选项（标题和内容一体）- 第一次展示10条
@@ -100,24 +112,24 @@ const generateNoteOptions = (
         id: i + 1,
         title: script.title,
         content: script.content,
-        imageSrc: `/sam/${(i % 25) + 1}.png`,
+        imageSrc: `/sam/${i + 1}.png`,
         tags: script.tags,
         strategy: script.strategy,
       });
     }
   }
 
-  // 生成多个图片选项 - 第一次展示10条
+  // 生成多个图片选项 - 第一次展示10条，但不超过25张图片
   const imageOptions: NoteOption[] = [];
   if (availableScripts.length > 0) {
-    const initialCount = Math.min(10, availableScripts.length);
+    const initialCount = Math.min(10, availableScripts.length, 25);
     for (let i = 0; i < initialCount; i++) {
       const script = availableScripts[i];
       imageOptions.push({
         id: i + 1,
         title: script.title,
         content: script.content,
-        imageSrc: `/sam/${(i % 25) + 1}.png`,
+        imageSrc: `/sam/${i + 1}.png`,
         tags: script.tags,
         strategy: script.strategy,
       });
@@ -136,23 +148,23 @@ const generateNoteOptions = (
 const getStrategyColor = (type: string, value: string) => {
   const colorMap: Record<string, Record<string, string>> = {
     style: {
-      "适中型": "bg-blue-100 text-blue-800",
-      "创新型": "bg-green-100 text-green-800", 
-      "保守型": "bg-gray-100 text-gray-800"
+      适中型: "bg-blue-100 text-blue-800",
+      创新型: "bg-green-100 text-green-800",
+      保守型: "bg-gray-100 text-gray-800",
     },
     view: {
-      "精致白领": "bg-purple-100 text-purple-800",
-      "社交达人": "bg-pink-100 text-pink-800",
-      "户外玩家": "bg-orange-100 text-orange-800",
-      "官方视角": "bg-cyan-100 text-cyan-800"
+      精致白领: "bg-purple-100 text-purple-800",
+      社交达人: "bg-pink-100 text-pink-800",
+      户外玩家: "bg-orange-100 text-orange-800",
+      官方视角: "bg-cyan-100 text-cyan-800",
     },
     target: {
-      "深度种草": "bg-red-100 text-red-800",
-      "激发好奇": "bg-yellow-100 text-yellow-800",
-      "号召行动": "bg-indigo-100 text-indigo-800"
-    }
+      深度种草: "bg-red-100 text-red-800",
+      激发好奇: "bg-yellow-100 text-yellow-800",
+      号召行动: "bg-indigo-100 text-indigo-800",
+    },
   };
-  
+
   return colorMap[type]?.[value] || "bg-gray-100 text-gray-800";
 };
 
@@ -172,42 +184,74 @@ export default function NotesDisplay({
   const [editedContent, setEditedContent] = useState("");
   const [editedTags, setEditedTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
-  
+
   // 新增加载状态管理
   const [isLoading, setIsLoading] = useState(true);
   const [loadingType, setLoadingType] = useState<"note" | "image">("note");
   const [isRegenerating, setIsRegenerating] = useState(false);
-  const [regeneratingType, setRegeneratingType] = useState<"note" | "image">("note");
-  const [hasMoreContent, setHasMoreContent] = useState({ note: true, image: true });
+  const [regeneratingType, setRegeneratingType] = useState<"note" | "image">(
+    "note"
+  );
+  const [hasMoreContent, setHasMoreContent] = useState({
+    note: true,
+    image: true,
+  });
 
   useEffect(() => {
     // 初始加载时显示笔记生成动画
     setLoadingType("note");
     setIsLoading(true);
-    
+
     // 移除独立的计时器，让 LoadingAnimation 控制加载流程
     // 数据立即生成，但显示由 LoadingAnimation 控制
-    const newNote = generateNoteOptions(requirement, noteCount, images, selectedSection, styleFlexibility, userPersona, communicationGoal);
+    const newNote = generateNoteOptions(
+      requirement,
+      noteCount,
+      images,
+      selectedSection,
+      styleFlexibility,
+      userPersona,
+      communicationGoal
+    );
     setNote(newNote);
-    
+
     // 根据筛选后的文案数量设置是否有更多内容
     const scripts = Object.values(scriptsData) as ScriptData[];
-    const filteredScripts = scripts.filter(script => {
+    const filteredScripts = scripts.filter((script) => {
       const strategy = script.strategy;
-      if (styleFlexibility.length === 0 && userPersona.length === 0 && communicationGoal.length === 0) {
+      if (
+        styleFlexibility.length === 0 &&
+        userPersona.length === 0 &&
+        communicationGoal.length === 0
+      ) {
         return true;
       }
-      const styleMatch = styleFlexibility.length === 0 || styleFlexibility.includes(strategy.style);
-      const viewMatch = userPersona.length === 0 || userPersona.includes(strategy.view);
-      const targetMatch = communicationGoal.length === 0 || communicationGoal.includes(strategy.target);
+      const styleMatch =
+        styleFlexibility.length === 0 ||
+        styleFlexibility.includes(strategy.style);
+      const viewMatch =
+        userPersona.length === 0 || userPersona.includes(strategy.view);
+      const targetMatch =
+        communicationGoal.length === 0 ||
+        communicationGoal.includes(strategy.target);
       return styleMatch && viewMatch && targetMatch;
     });
-    
+
     setHasMoreContent({
       note: newNote.noteOptions.length < filteredScripts.length,
-      image: newNote.imageOptions.length < filteredScripts.length
+      image:
+        newNote.imageOptions.length < filteredScripts.length &&
+        newNote.imageOptions.length < 25,
     });
-  }, [requirement, noteCount, images, selectedSection, styleFlexibility, userPersona, communicationGoal]);
+  }, [
+    requirement,
+    noteCount,
+    images,
+    selectedSection,
+    styleFlexibility,
+    userPersona,
+    communicationGoal,
+  ]);
 
   // 处理初始加载完成
   const handleInitialLoadComplete = () => {
@@ -255,22 +299,36 @@ export default function NotesDisplay({
     setIsRegenerating(true);
     setRegeneratingType(type);
 
+    if (!hasMoreContent[type]) {
+      setIsRegenerating(false);
+      return;
+    }
+
     // 根据用户选择的策略筛选文案
     const scripts = Object.values(scriptsData) as ScriptData[];
-    const filteredScripts = scripts.filter(script => {
+    const filteredScripts = scripts.filter((script) => {
       const strategy = script.strategy;
-      
+
       // 如果用户没有选择任何策略，则显示所有文案
-      if (styleFlexibility.length === 0 && userPersona.length === 0 && communicationGoal.length === 0) {
+      if (
+        styleFlexibility.length === 0 &&
+        userPersona.length === 0 &&
+        communicationGoal.length === 0
+      ) {
         return true;
       }
-      
+
       // 检查是否完全匹配用户选择的策略
       // 如果用户选择了某个策略类别，那么文案必须在该类别中有匹配项
-      const styleMatch = styleFlexibility.length === 0 || styleFlexibility.includes(strategy.style);
-      const viewMatch = userPersona.length === 0 || userPersona.includes(strategy.view);
-      const targetMatch = communicationGoal.length === 0 || communicationGoal.includes(strategy.target);
-      
+      const styleMatch =
+        styleFlexibility.length === 0 ||
+        styleFlexibility.includes(strategy.style);
+      const viewMatch =
+        userPersona.length === 0 || userPersona.includes(strategy.view);
+      const targetMatch =
+        communicationGoal.length === 0 ||
+        communicationGoal.includes(strategy.target);
+
       // 必须同时匹配所有已选择的策略类别
       return styleMatch && viewMatch && targetMatch;
     });
@@ -282,20 +340,20 @@ export default function NotesDisplay({
       // 检查是否还有更多可用的文案
       const currentCount = note.noteOptions.length;
       const remainingScripts = availableScripts.slice(currentCount);
-      
+
       if (remainingScripts.length > 0) {
         // 生成更多笔记选项，添加到现有选项后面（不重复）
         const newNoteOptions: NoteOption[] = [];
         const startId = note.noteOptions.length + 1;
         const addCount = Math.min(10, remainingScripts.length); // 每次最多添加10条
-        
+
         for (let i = 0; i < addCount; i++) {
           const script = remainingScripts[i];
           newNoteOptions.push({
             id: startId + i,
             title: script.title,
             content: script.content,
-            imageSrc: `/sam/${((currentCount + i) % 25) + 1}.png`,
+            imageSrc: `/sam/${currentCount + i + 1}.png`,
             tags: script.tags,
             strategy: script.strategy,
           });
@@ -304,37 +362,51 @@ export default function NotesDisplay({
           ...note,
           noteOptions: [...note.noteOptions, ...newNoteOptions],
         });
-        
+
         // 检查是否还有更多内容
         const remainingAfterAdd = remainingScripts.length - addCount;
         if (remainingAfterAdd <= 0) {
-          setHasMoreContent(prev => ({ ...prev, note: false }));
+          setHasMoreContent((prev) => ({ ...prev, note: false }));
         }
       } else {
         // 没有更多内容了，显示提示
         alert("没有更多笔记内容了！");
-        setHasMoreContent(prev => ({ ...prev, note: false }));
+        setHasMoreContent((prev) => ({ ...prev, note: false }));
         setIsRegenerating(false);
         return;
       }
     } else if (type === "image") {
-      // 检查是否还有更多可用的文案
+      // 检查是否还有更多可用的文案和图片
       const currentCount = note.imageOptions.length;
       const remainingScripts = availableScripts.slice(currentCount);
-      
+
+      // 检查图片数量是否已达到25张
+      if (currentCount >= 25) {
+        alert("图片数量已达到上限（25张）！");
+        setHasMoreContent((prev) => ({ ...prev, image: false }));
+        setIsRegenerating(false);
+        return;
+      }
+
       if (remainingScripts.length > 0) {
         // 生成更多图片选项，添加到现有选项后面（不重复）
         const newImageOptions: NoteOption[] = [];
         const startId = note.imageOptions.length + 1;
-        const addCount = Math.min(10, remainingScripts.length); // 每次最多添加10条
-        
+        // 限制添加数量，确保不超过25张图片
+        const maxAddCount = Math.min(
+          10,
+          remainingScripts.length,
+          25 - currentCount
+        );
+        const addCount = maxAddCount;
+
         for (let i = 0; i < addCount; i++) {
           const script = remainingScripts[i];
           newImageOptions.push({
             id: startId + i,
             title: script.title,
             content: script.content,
-            imageSrc: `/sam/${(i % 25) + 1}.png`,
+            imageSrc: `/sam/${currentCount + i + 1}.png`,
             tags: script.tags,
             strategy: script.strategy,
           });
@@ -343,21 +415,22 @@ export default function NotesDisplay({
           ...note,
           imageOptions: [...note.imageOptions, ...newImageOptions],
         });
-        
-        // 检查是否还有更多内容
+
+        // 检查是否还有更多内容或已达到图片上限
         const remainingAfterAdd = remainingScripts.length - addCount;
-        if (remainingAfterAdd <= 0) {
-          setHasMoreContent(prev => ({ ...prev, image: false }));
+        const newTotalCount = currentCount + addCount;
+        if (remainingAfterAdd <= 0 || newTotalCount >= 25) {
+          setHasMoreContent((prev) => ({ ...prev, image: false }));
         }
       } else {
         // 没有更多内容了，显示提示
         alert("没有更多图片内容了！");
-        setHasMoreContent(prev => ({ ...prev, image: false }));
+        setHasMoreContent((prev) => ({ ...prev, image: false }));
         setIsRegenerating(false);
         return;
       }
     }
-    
+
     // 移除 setIsRegenerating(false)，由 LoadingAnimation 的 onComplete 控制
   };
 
@@ -423,13 +496,13 @@ export default function NotesDisplay({
         <div className="flex gap-4 max-w-7xl mx-auto px-4 py-6 h-screen">
           {/* 左侧加载动画区域 */}
           <div className="flex-none w-80 bg-card rounded-lg border flex flex-col h-full">
-            <LoadingAnimation 
-              type={loadingType} 
-              onComplete={handleInitialLoadComplete} 
-              isInline={true} 
+            <LoadingAnimation
+              type={loadingType}
+              onComplete={handleInitialLoadComplete}
+              isInline={true}
             />
           </div>
-          
+
           {/* 右侧预览区域 - 显示加载状态 */}
           <div className="flex-1 flex flex-col gap-4 h-full max-w-2xl">
             <div className="flex gap-2 justify-end flex-shrink-0">
@@ -442,7 +515,7 @@ export default function NotesDisplay({
                 返回
               </Button>
             </div>
-            
+
             <div className="bg-card rounded-lg border p-6 flex-1 flex flex-col overflow-hidden">
               <h2 className="text-lg font-medium text-foreground mb-4 flex-shrink-0">
                 预览
@@ -474,30 +547,46 @@ export default function NotesDisplay({
         <div className="flex-none w-80 bg-card rounded-lg border flex flex-col h-full">
           {/* 如果正在重新生成，显示加载动画 */}
           {isRegenerating ? (
-            <LoadingAnimation 
-              type={regeneratingType} 
-              onComplete={handleRegenerateComplete} 
-              isInline={true} 
+            <LoadingAnimation
+              type={regeneratingType}
+              onComplete={handleRegenerateComplete}
+              isInline={true}
             />
           ) : (
             <>
               {/* 策略显示区域 */}
-              {(styleFlexibility.length > 0 || userPersona.length > 0 || communicationGoal.length > 0) && (
+              {(styleFlexibility.length > 0 ||
+                userPersona.length > 0 ||
+                communicationGoal.length > 0) && (
                 <div className="p-4 pb-2 border-b">
-                  <div className="text-xs text-muted-foreground mb-2">当前策略筛选:</div>
+                  <div className="text-xs text-muted-foreground mb-2">
+                    当前策略筛选:
+                  </div>
                   <div className="flex flex-wrap gap-1">
                     {styleFlexibility.map((style) => (
-                      <Badge key={style} variant="outline" className="text-xs px-1.5 py-0.5">
+                      <Badge
+                        key={style}
+                        variant="outline"
+                        className="text-xs px-1.5 py-0.5"
+                      >
                         {style}
                       </Badge>
                     ))}
                     {userPersona.map((persona) => (
-                      <Badge key={persona} variant="outline" className="text-xs px-1.5 py-0.5">
+                      <Badge
+                        key={persona}
+                        variant="outline"
+                        className="text-xs px-1.5 py-0.5"
+                      >
                         {persona}
                       </Badge>
                     ))}
                     {communicationGoal.map((goal) => (
-                      <Badge key={goal} variant="outline" className="text-xs px-1.5 py-0.5">
+                      <Badge
+                        key={goal}
+                        variant="outline"
+                        className="text-xs px-1.5 py-0.5"
+                      >
                         {goal}
                       </Badge>
                     ))}
@@ -538,9 +627,8 @@ export default function NotesDisplay({
                     size="sm"
                     onClick={() => handleRegenerateOptions(activeTab)}
                     className="w-full"
-                    disabled={isRegenerating || !hasMoreContent[activeTab]}
                   >
-                    {hasMoreContent[activeTab] ? "更多生成" : "没有更多内容"}
+                    更多生成
                   </Button>
                 </div>
 
@@ -570,24 +658,33 @@ export default function NotesDisplay({
                             <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />
                           )}
                         </div>
-                        
+
                         {/* 策略标签 */}
                         <div className="flex flex-wrap gap-1">
-                          <Badge 
-                            variant="secondary" 
-                            className={`text-xs px-1.5 py-0.5 ${getStrategyColor('style', option.strategy.style)}`}
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs px-1.5 py-0.5 ${getStrategyColor(
+                              "style",
+                              option.strategy.style
+                            )}`}
                           >
                             {option.strategy.style}
                           </Badge>
-                          <Badge 
-                            variant="secondary" 
-                            className={`text-xs px-1.5 py-0.5 ${getStrategyColor('view', option.strategy.view)}`}
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs px-1.5 py-0.5 ${getStrategyColor(
+                              "view",
+                              option.strategy.view
+                            )}`}
                           >
                             {option.strategy.view}
                           </Badge>
-                          <Badge 
-                            variant="secondary" 
-                            className={`text-xs px-1.5 py-0.5 ${getStrategyColor('target', option.strategy.target)}`}
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs px-1.5 py-0.5 ${getStrategyColor(
+                              "target",
+                              option.strategy.target
+                            )}`}
                           >
                             {option.strategy.target}
                           </Badge>
@@ -655,7 +752,7 @@ export default function NotesDisplay({
               发布
             </Button>
           </div>
-          
+
           <div className="bg-card rounded-lg border p-6 flex-1 flex flex-col overflow-hidden">
             <h2 className="text-lg font-medium text-foreground mb-4 flex-shrink-0">
               预览
@@ -765,21 +862,30 @@ export default function NotesDisplay({
                       策略信息
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      <Badge 
-                        variant="outline" 
-                        className={`${getStrategyColor('style', selectedNoteOption.strategy.style)}`}
+                      <Badge
+                        variant="outline"
+                        className={`${getStrategyColor(
+                          "style",
+                          selectedNoteOption.strategy.style
+                        )}`}
                       >
                         风格: {selectedNoteOption.strategy.style}
                       </Badge>
-                      <Badge 
-                        variant="outline" 
-                        className={`${getStrategyColor('view', selectedNoteOption.strategy.view)}`}
+                      <Badge
+                        variant="outline"
+                        className={`${getStrategyColor(
+                          "view",
+                          selectedNoteOption.strategy.view
+                        )}`}
                       >
                         视角: {selectedNoteOption.strategy.view}
                       </Badge>
-                      <Badge 
-                        variant="outline" 
-                        className={`${getStrategyColor('target', selectedNoteOption.strategy.target)}`}
+                      <Badge
+                        variant="outline"
+                        className={`${getStrategyColor(
+                          "target",
+                          selectedNoteOption.strategy.target
+                        )}`}
                       >
                         目标: {selectedNoteOption.strategy.target}
                       </Badge>
