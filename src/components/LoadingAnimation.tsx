@@ -70,7 +70,11 @@ const imageThinkingSteps: ThinkingStep[] = [
   },
 ];
 
-export default function LoadingAnimation({ type, onComplete, isInline = false }: LoadingAnimationProps) {
+export default function LoadingAnimation({
+  type,
+  onComplete,
+  isInline = false,
+}: LoadingAnimationProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [isComplete, setIsComplete] = useState(false);
@@ -88,8 +92,8 @@ export default function LoadingAnimation({ type, onComplete, isInline = false }:
 
     const stepTimer = setTimeout(() => {
       if (currentStep < steps.length) {
-        setCompletedSteps(prev => [...prev, currentStep]);
-        setCurrentStep(prev => prev + 1);
+        setCompletedSteps((prev) => [...prev, currentStep]);
+        setCurrentStep((prev) => prev + 1);
       } else {
         setIsComplete(true);
       }
@@ -103,9 +107,9 @@ export default function LoadingAnimation({ type, onComplete, isInline = false }:
     if (type === "image" && currentStep >= 2) {
       const imageTimer = setInterval(() => {
         if (currentImageIndex < 12) {
-          const newImage = `/sam/${(Math.floor(Math.random() * 16) + 1)}.png`;
-          setGeneratedImages(prev => [...prev, newImage]);
-          setCurrentImageIndex(prev => prev + 1);
+          const newImage = `/sam/${Math.floor(Math.random() * 16) + 1}.png`;
+          setGeneratedImages((prev) => [...prev, newImage]);
+          setCurrentImageIndex((prev) => prev + 1);
         } else {
           clearInterval(imageTimer);
         }
@@ -177,45 +181,19 @@ export default function LoadingAnimation({ type, onComplete, isInline = false }:
               {index === currentStep && (
                 <div className="flex space-x-1">
                   <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
-                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                  <div
+                    className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.1s" }}
+                  ></div>
+                  <div
+                    className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
                 </div>
               )}
             </div>
           ))}
         </div>
-
-        {/* 图片生成预览 - 简化版 */}
-        {type === "image" && (
-          <div className="px-4 pb-4">
-            <h5 className="text-xs font-medium text-muted-foreground mb-2">
-              生成进度 ({generatedImages.length}/12)
-            </h5>
-            <div className="grid grid-cols-3 gap-1">
-              {generatedImages.map((image, index) => (
-                <div
-                  key={index}
-                  className="aspect-square rounded overflow-hidden border border-gray-200 animate-in fade-in-0 zoom-in-95 duration-300"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <img
-                    src={image}
-                    alt={`生成图片 ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-              {Array.from({ length: 12 - generatedImages.length }).map((_, index) => (
-                <div
-                  key={`placeholder-${index}`}
-                  className="aspect-square rounded border border-dashed border-gray-300 flex items-center justify-center bg-gray-50"
-                >
-                  <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* 进度条 */}
         <div className="px-4 pb-4">
@@ -223,13 +201,20 @@ export default function LoadingAnimation({ type, onComplete, isInline = false }:
             <div
               className="bg-primary h-1.5 rounded-full transition-all duration-300 ease-out"
               style={{
-                width: `${isComplete ? 100 : ((completedSteps.length / steps.length) * 100)}%`,
+                width: `${
+                  isComplete
+                    ? 100
+                    : (completedSteps.length / steps.length) * 100
+                }%`,
               }}
             ></div>
           </div>
           {isComplete && (
             <div className="text-center mt-2">
-              <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-800 text-xs"
+              >
                 <CheckCircle className="h-2.5 w-2.5 mr-1" />
                 完成
               </Badge>
@@ -256,10 +241,9 @@ export default function LoadingAnimation({ type, onComplete, isInline = false }:
             {type === "note" ? "正在生成笔记内容" : "正在生成图片"}
           </h3>
           <p className="text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-2 duration-500 delay-200">
-            {type === "note" 
-              ? "AI正在深度思考，为您创作优质内容..." 
-              : "AI正在为您生成精美的配图..."
-            }
+            {type === "note"
+              ? "AI正在深度思考，为您创作优质内容..."
+              : "AI正在为您生成精美的配图..."}
           </p>
         </div>
 
@@ -306,8 +290,14 @@ export default function LoadingAnimation({ type, onComplete, isInline = false }:
                 <div className="ml-auto">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                    <div
+                      className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
                   </div>
                 </div>
               )}
@@ -335,14 +325,16 @@ export default function LoadingAnimation({ type, onComplete, isInline = false }:
                   />
                 </div>
               ))}
-              {Array.from({ length: 12 - generatedImages.length }).map((_, index) => (
-                <div
-                  key={`placeholder-${index}`}
-                  className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50"
-                >
-                  <div className="w-4 h-4 bg-gray-300 rounded-full animate-pulse"></div>
-                </div>
-              ))}
+              {Array.from({ length: 12 - generatedImages.length }).map(
+                (_, index) => (
+                  <div
+                    key={`placeholder-${index}`}
+                    className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50"
+                  >
+                    <div className="w-4 h-4 bg-gray-300 rounded-full animate-pulse"></div>
+                  </div>
+                )
+              )}
             </div>
           </div>
         )}
@@ -352,7 +344,9 @@ export default function LoadingAnimation({ type, onComplete, isInline = false }:
           <div
             className="bg-primary h-2 rounded-full transition-all duration-300 ease-out"
             style={{
-              width: `${isComplete ? 100 : ((completedSteps.length / steps.length) * 100)}%`,
+              width: `${
+                isComplete ? 100 : (completedSteps.length / steps.length) * 100
+              }%`,
             }}
           ></div>
         </div>
@@ -361,7 +355,10 @@ export default function LoadingAnimation({ type, onComplete, isInline = false }:
           <div className="text-center mt-4 animate-in fade-in-0 zoom-in-95 duration-500">
             <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <Badge variant="secondary" className="bg-green-100 text-green-800 border-0">
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-800 border-0"
+              >
                 <CheckCircle className="h-3 w-3 mr-1" />
                 生成完成！
               </Badge>
